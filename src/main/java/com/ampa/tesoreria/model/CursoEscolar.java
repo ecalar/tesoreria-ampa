@@ -37,14 +37,18 @@ public class CursoEscolar {
 
     // Relaciones (cargadas de forma perezosa, se rellenan desde las otras entidades)
     @OneToMany(mappedBy = "curso", fetch = FetchType.LAZY)
+    @Builder.Default
     private List<Socio> socios = new ArrayList<>();
 
     @OneToMany(mappedBy = "curso", fetch = FetchType.LAZY)
+    @Builder.Default
     private List<Actividad> actividades = new ArrayList<>();
 
     @OneToMany(mappedBy = "curso", fetch = FetchType.LAZY)
+    @Builder.Default
     private List<CampaniaFotos> campaniasFotos = new ArrayList<>();
 
     @OneToMany(mappedBy = "curso", fetch = FetchType.LAZY)
+    @Builder.Default
     private List<Gasto> gastos = new ArrayList<>();
 }

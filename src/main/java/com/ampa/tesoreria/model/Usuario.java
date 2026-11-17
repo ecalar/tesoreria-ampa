@@ -24,5 +24,6 @@ public class Usuario {
     private String password;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean activo = true;
 }

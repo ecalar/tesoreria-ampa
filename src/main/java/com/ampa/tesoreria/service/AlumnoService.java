@@ -21,7 +21,7 @@ public class AlumnoService {
     private final SocioService socioService;
 
     public Alumno findById(Long id) {
-        return alumnoRepository.findById(id)
+        return alumnoRepository.findByIdConDetalles(id)
                 .orElseThrow(() -> new IllegalArgumentException("Alumno no encontrado: " + id));
     }
 

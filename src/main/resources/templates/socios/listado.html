@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Socios')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Socios</h2>
+        <a th:href="@{/socios/nuevo}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Nuevo socio
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/socios}" method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" th:value="${q}" placeholder="Nombre, apellidos o DNI"
+                           class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Curso</label>
+                    <select name="cursoId" class="form-select">
+                        <option th:each="c : ${cursos}"
+                                th:value="${c.id}"
+                                th:text="${c.nombre}"
+                                th:selected="${c.id == cursoId}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Metodo de pago</label>
+                    <select name="metodoPago" class="form-select">
+                        <option value="">Todos</option>
+                        <option th:each="m : ${metodos}"
+                                th:value="${m}"
+                                th:text="${m.name()}"
+                                th:selected="${metodoPago != null and metodoPago.name() == m.name()}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Totales -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-body py-2">
+                    <small class="text-muted">Numero de socios</small>
+                    <h4 class="mb-0" th:text="${numSocios}"></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-body py-2">
+                    <small class="text-muted">Total recaudado</small>
+                    <h4 class="mb-0">
+                        <span th:text="${#numbers.formatDecimal(total, 1, 2)}"></span> EUR
+                    </h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-body py-2">
+                    <small class="text-muted">Desglose</small>
+                    <div class="small">
+                        <strong th:text="${numEfectivo}"></strong> efectivo
+                        (<span th:text="${#numbers.formatDecimal(totalEfectivo, 1, 2)}"></span> EUR) ·
+                        <strong th:text="${numTransferencia}"></strong> transferencia
+                        (<span th:text="${#numbers.formatDecimal(totalTransferencia, 1, 2)}"></span> EUR)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de exportacion -->
+    <div class="mb-3 d-flex gap-2 flex-wrap">
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-download"></i> Exportar listado
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" th:href="@{/socios/export/listado/csv(cursoId=${cursoId},q=${q},metodoPago=${metodoPago})}">CSV</a></li>
+                <li><a class="dropdown-item" th:href="@{/socios/export/listado/xlsx(cursoId=${cursoId},q=${q},metodoPago=${metodoPago})}">Excel</a></li>
+                <li><a class="dropdown-item" th:href="@{/socios/export/listado/pdf(cursoId=${cursoId},q=${q},metodoPago=${metodoPago})}">PDF</a></li>
+            </ul>
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-calculator"></i> Exportar totales
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" th:href="@{/socios/export/totales/csv(cursoId=${cursoId},q=${q},metodoPago=${metodoPago})}">CSV</a></li>
+                <li><a class="dropdown-item" th:href="@{/socios/export/totales/xlsx(cursoId=${cursoId},q=${q},metodoPago=${metodoPago})}">Excel</a></li>
+                <li><a class="dropdown-item" th:href="@{/socios/export/totales/pdf(cursoId=${cursoId},q=${q},metodoPago=${metodoPago})}">PDF</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>DNI</th>
+                    <th>Email</th>
+                    <th>Telefono</th>
+                    <th>Alumnos</th>
+                    <th>Metodo</th>
+                    <th class="text-end">Cuota</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${socios}">
+                    <td>
+                        <a th:href="@{'/socios/' + ${s.id}}" th:text="${s.nombre + ' ' + s.apellidos}"></a>
+                    </td>
+                    <td th:text="${s.dni}"></td>
+                    <td th:text="${s.email}"></td>
+                    <td th:text="${s.telefono}"></td>
+                    <td><span th:text="${s.alumnos.size()}"></span></td>
+                    <td>
+                        <span th:if="${s.metodoPago.name() == 'EFECTIVO'}" class="badge bg-success">EFECTIVO</span>
+                        <span th:if="${s.metodoPago.name() == 'TRANSFERENCIA'}" class="badge bg-info">TRANSFERENCIA</span>
+                    </td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(s.cuotaImporte, 1, 2)} + ' EUR'"></td>
+                    <td class="text-end">
+                        <a th:href="@{'/socios/' + ${s.id}}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a th:href="@{'/socios/' + ${s.id} + '/editar'}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(socios)}">
+                    <td colspan="8" class="text-center text-muted py-4">
+                        No hay socios que coincidan con los filtros.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

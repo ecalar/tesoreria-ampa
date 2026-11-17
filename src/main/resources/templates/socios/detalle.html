@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Socio')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 th:text="${socio.nombre + ' ' + socio.apellidos}"></h2>
+        <div>
+            <a th:href="@{'/socios/' + ${socio.id} + '/editar'}" class="btn btn-outline-secondary">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            <form th:action="@{'/socios/' + ${socio.id} + '/borrar'}" method="post" class="d-inline"
+                  onsubmit="return confirm('Borrar este socio y todos sus alumnos?');">
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i> Borrar
+                </button>
+            </form>
+            <a th:href="@{/socios}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <!-- Datos del socio -->
+    <div class="card mb-4">
+        <div class="card-header">Datos del socio</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">DNI</dt><dd class="col-sm-8" th:text="${socio.dni}"></dd>
+                        <dt class="col-sm-4">Email</dt><dd class="col-sm-8" th:text="${socio.email}"></dd>
+                        <dt class="col-sm-4">Telefono</dt><dd class="col-sm-8" th:text="${socio.telefono}"></dd>
+                        <dt class="col-sm-4">Direccion</dt><dd class="col-sm-8" th:text="${socio.direccion}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Metodo pago</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-info" th:text="${socio.metodoPago.name()}"></span>
+                        </dd>
+                        <dt class="col-sm-4">N. recibo</dt><dd class="col-sm-8" th:text="${socio.numeroRecibo}"></dd>
+                        <dt class="col-sm-4">Cuota</dt>
+                        <dd class="col-sm-8" th:text="${#numbers.formatDecimal(socio.cuotaImporte, 1, 2)} + ' EUR'"></dd>
+                        <dt class="col-sm-4">Fecha alta</dt>
+                        <dd class="col-sm-8" th:text="${#temporals.format(socio.fechaAlta, 'dd/MM/yyyy')}"></dd>
+                        <dt class="col-sm-4">Permiso imagen</dt>
+                        <dd class="col-sm-8">
+                            <span th:if="${socio.permisoImagen}" class="badge bg-success">SI</span>
+                            <span th:unless="${socio.permisoImagen}" class="badge bg-secondary">NO</span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alumnos -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Alumnos/as</h4>
+        <a th:href="@{'/socios/' + ${socio.id} + '/alumnos/nuevo'}" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-lg"></i> Anadir alumno
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Curso</th>
+                    <th>F. nacimiento</th>
+                    <th>Alergias</th>
+                    <th>Contactos emergencia</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${alumnos}">
+                    <td th:text="${a.nombre + ' ' + a.apellidos}"></td>
+                    <td th:text="${a.curso}"></td>
+                    <td th:text="${a.fechaNacimiento != null ? #temporals.format(a.fechaNacimiento, 'dd/MM/yyyy') : ''}"></td>
+                    <td th:text="${a.alergias}"></td>
+                    <td>
+                        <span th:text="${a.contactosEmergencia.size()}" class="badge bg-secondary"></span>
+                    </td>
+                    <td class="text-end">
+                        <a th:href="@{'/socios/' + ${socio.id} + '/alumnos/' + ${a.id} + '/editar'}"
+                           class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form th:action="@{'/socios/' + ${socio.id} + '/alumnos/' + ${a.id} + '/borrar'}"
+                              method="post" class="d-inline"
+                              onsubmit="return confirm('Borrar este alumno?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(alumnos)}">
+                    <td colspan="6" class="text-center text-muted py-4">
+                        Este socio aun no tiene alumnos registrados.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,17 +1,24 @@
 package com.ampa.tesoreria.repository;
 
 import com.ampa.tesoreria.model.Alumno;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface AlumnoRepository extends JpaRepository<Alumno, Long> {
 
+    @EntityGraph(attributePaths = {"contactosEmergencia", "socio"})
     List<Alumno> findBySocioId(Long socioId);
 
     List<Alumno> findByCurso(String curso);
+
+    @EntityGraph(attributePaths = {"contactosEmergencia", "socio"})
+    @Query("SELECT a FROM Alumno a WHERE a.id = :id")
+    Optional<Alumno> findByIdConDetalles(@Param("id") Long id);
 
     @Query("""
         SELECT a FROM Alumno a

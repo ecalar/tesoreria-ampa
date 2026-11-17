@@ -42,7 +42,7 @@ public class SocioService {
     }
 
     public Socio findById(Long id) {
-        return socioRepository.findById(id)
+        return socioRepository.findByIdConAlumnos(id)
                 .orElseThrow(() -> new IllegalArgumentException("Socio no encontrado: " + id));
     }
 

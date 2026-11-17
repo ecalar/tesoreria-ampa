@@ -17,10 +17,19 @@ public class AlumnoForm {
     private String apellidos;
     private String curso;
     private LocalDate fechaNacimiento;
+    private String direccion;
+    private String centroEducativo;
     private String alergias;
     private String observacionesMedicas;
+    private boolean autorizacionDesplazamientoMedico;
 
-    /** Hasta 4 contactos de emergencia (los nulos se ignoran al guardar) */
+    // Solo si no es socio
+    private String nombreResponsable;
+    private String dniResponsable;
+    private String telefonoResponsable;
+    private String emailResponsable;
+    private String parentescoResponsable;
+
     private List<ContactoForm> contactos = new ArrayList<>();
 
     @Getter

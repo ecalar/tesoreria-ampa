@@ -95,11 +95,17 @@ public class InscripcionService {
                     "La actividad no tiene configurado el precio para la modalidad " + form.getModalidad());
         }
 
-        // Aplicar descuento socio
-        BigDecimal importeCalculado = actividadService.calcularImporteMensual(actividad, importeBase);
+        // NUEVO: solo aplicar descuento si el alumno pertenece a un socio
+        BigDecimal importeCalculado;
+        BigDecimal fianzaImporte;
 
-        // Calcular fianza (si aplica)
-        BigDecimal fianzaImporte = actividadService.calcularFianza(actividad);
+        if (alumno.getSocio() != null) {
+            importeCalculado = actividadService.calcularImporteMensual(actividad, importeBase);
+            fianzaImporte = actividadService.calcularFianza(actividad);
+        } else {
+            importeCalculado = importeBase.setScale(2, java.math.RoundingMode.HALF_UP);
+            fianzaImporte = actividad.isTieneFianza() ? actividad.getImporteFianza() : null;
+        }
 
         Inscripcion inscripcion = Inscripcion.builder()
                 .actividad(actividad)

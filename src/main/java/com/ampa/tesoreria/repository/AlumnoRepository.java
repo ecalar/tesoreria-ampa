@@ -14,6 +14,9 @@ public interface AlumnoRepository extends JpaRepository<Alumno, Long> {
     @EntityGraph(attributePaths = {"contactosEmergencia", "socio"})
     List<Alumno> findBySocioId(Long socioId);
 
+    @EntityGraph(attributePaths = {"contactosEmergencia"})
+    List<Alumno> findBySocioIsNull();
+
     List<Alumno> findByCurso(String curso);
 
     @EntityGraph(attributePaths = {"contactosEmergencia", "socio"})

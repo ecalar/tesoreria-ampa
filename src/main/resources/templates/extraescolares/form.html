@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Actividad')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <h2 th:text="${editando} ? 'Editar actividad' : 'Nueva actividad extraescolar'"></h2>
+
+    <form th:action="${editando} ? @{'/extraescolares/' + ${form.id} + '/editar'} : @{/extraescolares/nueva}"
+          th:object="${form}" method="post" class="mt-4" style="max-width: 900px;">
+
+        <div class="card mb-3">
+            <div class="card-header">Datos generales</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Nombre *</label>
+                    <input type="text" th:field="*{nombre}" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Descripcion</label>
+                    <textarea th:field="*{descripcion}" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Fecha inicio *</label>
+                        <input type="date" th:field="*{fechaInicio}" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Fecha fin *</label>
+                        <input type="date" th:field="*{fechaFin}" class="form-control" required>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label d-block">Dias de la semana</label>
+                    <div class="form-check form-check-inline">
+                        <input type="checkbox" th:field="*{diasSeleccionados}" value="L" class="form-check-input" id="dL">
+                        <label class="form-check-label" for="dL">Lunes</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input type="checkbox" th:field="*{diasSeleccionados}" value="M" class="form-check-input" id="dM">
+                        <label class="form-check-label" for="dM">Martes</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input type="checkbox" th:field="*{diasSeleccionados}" value="X" class="form-check-input" id="dX">
+                        <label class="form-check-label" for="dX">Miercoles</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input type="checkbox" th:field="*{diasSeleccionados}" value="J" class="form-check-input" id="dJ">
+                        <label class="form-check-label" for="dJ">Jueves</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input type="checkbox" th:field="*{diasSeleccionados}" value="V" class="form-check-input" id="dV">
+                        <label class="form-check-label" for="dV">Viernes</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Horario</label>
+                    <input type="text" th:field="*{horario}" class="form-control" placeholder="Ej: 16:00-17:30">
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">Precios y descuento</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Precio mes completo *</label>
+                        <input type="number" step="0.01" th:field="*{precioMesCompleto}" class="form-control" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Precio medio mes *</label>
+                        <input type="number" step="0.01" th:field="*{precioMedioMes}" class="form-control" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Descuento socio (%)</label>
+                        <input type="number" step="0.01" th:field="*{descuentoSocioPorcentaje}" class="form-control">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">Fianza</div>
+            <div class="card-body">
+                <div class="form-check mb-3">
+                    <input type="checkbox" th:field="*{tieneFianza}" class="form-check-input" id="tieneFianza">
+                    <label class="form-check-label" for="tieneFianza">
+                        Esta actividad tiene fianza (se devuelve si el alumno se da de baja)
+                    </label>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Importe de la fianza (sin descuento)</label>
+                    <input type="number" step="0.01" th:field="*{importeFianza}" class="form-control">
+                    <small class="text-muted">
+                        Se aplicara el descuento socio al calcular la fianza real del alumno.
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save"></i> <span th:text="${editando} ? 'Guardar cambios' : 'Crear actividad'"></span>
+        </button>
+        <a th:href="@{/extraescolares}" class="btn btn-outline-secondary">Cancelar</a>
+    </form>
+</div>
+</body>
+</html>

@@ -10,15 +10,15 @@ import java.util.Optional;
 
 public interface ActividadRepository extends JpaRepository<Actividad, Long> {
 
-    @EntityGraph(attributePaths = {"inscripciones", "inscripciones.pagosMensuales"})
+    @EntityGraph(attributePaths = {"inscripciones"})
     List<Actividad> findByCursoId(Long cursoId);
 
-    @EntityGraph(attributePaths = {"inscripciones", "inscripciones.pagosMensuales"})
+    @EntityGraph(attributePaths = {"inscripciones"})
     List<Actividad> findByCursoIdAndTipo(Long cursoId, TipoActividad tipo);
 
-    @EntityGraph(attributePaths = {"inscripciones", "inscripciones.pagosMensuales"})
+    @EntityGraph(attributePaths = {"inscripciones"})
     List<Actividad> findByCursoIdAndNombreContainingIgnoreCase(Long cursoId, String nombre);
 
-    @EntityGraph(attributePaths = {"inscripciones", "inscripciones.pagosMensuales"})
+    @EntityGraph(attributePaths = {"inscripciones"})
     Optional<Actividad> findById(Long id);
 }

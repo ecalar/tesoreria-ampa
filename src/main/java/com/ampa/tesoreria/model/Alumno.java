@@ -26,11 +26,16 @@ public class Alumno {
     @Column(nullable = false, length = 150)
     private String apellidos;
 
-    /** Curso actual del alumno en el colegio (ej: "3ºA", "5 años B", "PLURI") */
     @Column(length = 50)
     private String curso;
 
     private LocalDate fechaNacimiento;
+
+    @Column(length = 250)
+    private String direccion;
+
+    @Column(length = 200)
+    private String centroEducativo;
 
     @Column(length = 500)
     private String alergias;
@@ -38,10 +43,33 @@ public class Alumno {
     @Column(length = 1000)
     private String observacionesMedicas;
 
+    /** Autorizacion al centro para trasladar al alumno a un centro médico en caso de urgencia */
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    @Builder.Default
+    private boolean autorizacionDesplazamientoMedico = false;
+
+    // --- Datos del responsable legal (solo si no es socio) ---
+
+    @Column(length = 150)
+    private String nombreResponsable;
+
+    @Column(length = 20)
+    private String dniResponsable;
+
+    @Column(length = 20)
+    private String telefonoResponsable;
+
+    @Column(length = 100)
+    private String emailResponsable;
+
+    @Column(length = 50)
+    private String parentescoResponsable;
+
     // Relaciones
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "socio_id", nullable = false)
+    /** Puede ser null si el alumno no es socio del AMPA */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "socio_id")
     private Socio socio;
 
     @OneToMany(mappedBy = "alumno", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -61,9 +89,36 @@ public class Alumno {
         contacto.setAlumno(null);
     }
 
-    /** Nombre completo para mostrar en listados */
     @Transient
     public String getNombreCompleto() {
         return nombre + " " + apellidos;
+    }
+
+    @Transient
+    public boolean isEsSocio() {
+        return socio != null;
+    }
+
+    /** Nombre del responsable legal: si tiene socio, sale del socio; si no, del campo manual */
+    @Transient
+    public String getNombreResponsableMostrar() {
+        if (socio != null) {
+            return socio.getNombre() + " " + socio.getApellidos();
+        }
+        return nombreResponsable;
+    }
+
+    /** Email del responsable: socio o manual */
+    @Transient
+    public String getEmailResponsableMostrar() {
+        if (socio != null) return socio.getEmail();
+        return emailResponsable;
+    }
+
+    /** Telefono del responsable: socio o manual */
+    @Transient
+    public String getTelefonoResponsableMostrar() {
+        if (socio != null) return socio.getTelefono();
+        return telefonoResponsable;
     }
 }

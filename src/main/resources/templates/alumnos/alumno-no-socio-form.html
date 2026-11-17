@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Alumno no socio')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <h2 th:text="${editando} ? 'Editar alumno no socio' : 'Nuevo alumno no socio'"></h2>
+    <p class="text-muted">Alumno sin vinculo de socio con el AMPA</p>
+
+    <form th:action="${editando} ? @{'/alumnos/' + ${form.id} + '/editar-no-socio'} : @{/alumnos/nuevo-no-socio}"
+          th:object="${form}" method="post" class="mt-4" style="max-width: 1000px;">
+
+        <input type="hidden" name="returnTo" th:value="${returnTo}">
+
+        <div class="card mb-3">
+            <div class="card-header">Datos del alumno</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" th:field="*{nombre}" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Apellidos *</label>
+                        <input type="text" th:field="*{apellidos}" class="form-control" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Curso</label>
+                        <input type="text" th:field="*{curso}" class="form-control" placeholder="Ej: 3A">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Fecha nacimiento</label>
+                        <input type="date" th:field="*{fechaNacimiento}" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Centro educativo</label>
+                        <input type="text" th:field="*{centroEducativo}" class="form-control">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Domicilio</label>
+                    <input type="text" th:field="*{direccion}" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Alergias</label>
+                    <textarea th:field="*{alergias}" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Observaciones medicas</label>
+                    <textarea th:field="*{observacionesMedicas}" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" th:field="*{autorizacionDesplazamientoMedico}" class="form-check-input">
+                    <label class="form-check-label">
+                        Autorizo al centro a trasladar al alumno a un centro medico en caso de urgencia
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">Responsable legal (padre/madre/tutor)</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Nombre y apellidos *</label>
+                        <input type="text" th:field="*{nombreResponsable}" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">DNI</label>
+                        <input type="text" th:field="*{dniResponsable}" class="form-control">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Telefono</label>
+                        <input type="text" th:field="*{telefonoResponsable}" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Email *</label>
+                        <input type="email" th:field="*{emailResponsable}" class="form-control" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Parentesco</label>
+                        <input type="text" th:field="*{parentescoResponsable}" class="form-control" placeholder="Ej: madre">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">Contactos de emergencia</div>
+            <div class="card-body">
+                <p class="text-muted small">Rellena al menos uno. Los huecos vacios se ignoran.</p>
+                <div th:each="c, iter : *{contactos}" class="row mb-2 align-items-end">
+                    <div class="col-md-1">
+                        <label class="form-label small">#</label>
+                        <input type="number" th:field="*{contactos[__${iter.index}__].orden}"
+                               class="form-control form-control-sm" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">Nombre</label>
+                        <input type="text" th:field="*{contactos[__${iter.index}__].nombre}"
+                               class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">Telefono</label>
+                        <input type="text" th:field="*{contactos[__${iter.index}__].telefono}"
+                               class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">Parentesco</label>
+                        <input type="text" th:field="*{contactos[__${iter.index}__].parentesco}"
+                               class="form-control form-control-sm">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save"></i> <span th:text="${editando} ? 'Guardar cambios' : 'Crear alumno'"></span>
+        </button>
+        <a th:if="${returnTo != null}" th:href="${returnTo}" class="btn btn-outline-secondary">Cancelar</a>
+    </form>
+</div>
+</body>
+</html>

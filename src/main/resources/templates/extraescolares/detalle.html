@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Actividad')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 th:text="${actividad.nombre}"></h2>
+        <div>
+            <a th:href="@{'/extraescolares/' + ${actividad.id} + '/editar'}" class="btn btn-outline-secondary">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            <form th:action="@{'/extraescolares/' + ${actividad.id} + '/borrar'}" method="post" class="d-inline"
+                  onsubmit="return confirm('Borrar esta actividad? Solo es posible si no tiene inscritos activos.');">
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i> Borrar
+                </button>
+            </form>
+            <a th:href="@{/extraescolares}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <!-- Datos de la actividad -->
+    <div class="card mb-4">
+        <div class="card-header">Datos de la actividad</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Periodo</dt>
+                        <dd class="col-sm-7">
+                            <span th:text="${#temporals.format(actividad.fechaInicio, 'dd/MM/yyyy')}"></span>
+                            -
+                            <span th:text="${#temporals.format(actividad.fechaFin, 'dd/MM/yyyy')}"></span>
+                        </dd>
+                        <dt class="col-sm-5">Dias</dt>
+                        <dd class="col-sm-7" th:text="${actividad.diasSemana}"></dd>
+                        <dt class="col-sm-5">Horario</dt>
+                        <dd class="col-sm-7" th:text="${actividad.horario}"></dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Precio mes completo</dt>
+                        <dd class="col-sm-7" th:text="${#numbers.formatDecimal(actividad.precioMesCompleto, 1, 2)} + ' EUR'"></dd>
+                        <dt class="col-sm-5">Precio medio mes</dt>
+                        <dd class="col-sm-7" th:text="${#numbers.formatDecimal(actividad.precioMedioMes, 1, 2)} + ' EUR'"></dd>
+                        <dt class="col-sm-5">Descuento socio</dt>
+                        <dd class="col-sm-7" th:text="${actividad.descuentoSocioPorcentaje} + ' %'"></dd>
+                        <dt class="col-sm-5">Fianza</dt>
+                        <dd class="col-sm-7">
+                            <span th:if="${actividad.tieneFianza}"
+                                  th:text="${#numbers.formatDecimal(actividad.importeFianza, 1, 2)} + ' EUR'"></span>
+                            <span th:unless="${actividad.tieneFianza}" class="text-muted">Sin fianza</span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Totales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body py-2">
+                    <small class="text-muted">Cobrado</small>
+                    <h5 class="mb-0" th:text="${#numbers.formatDecimal(totalPagado, 1, 2)} + ' EUR'"></h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body py-2">
+                    <small class="text-muted">Pendiente</small>
+                    <h5 class="mb-0" th:text="${#numbers.formatDecimal(totalPendiente, 1, 2)} + ' EUR'"></h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body py-2">
+                    <small class="text-muted">Fianzas</small>
+                    <div class="small">
+                        Pendientes: <strong th:text="${fianzasPendientes}"></strong> ·
+                        Pagadas: <strong th:text="${fianzasPagadas}"></strong><br>
+                        Devueltas: <strong th:text="${fianzasDevueltas}"></strong> ·
+                        Aplicadas: <strong th:text="${fianzasAplicadas}"></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body py-2">
+                    <small class="text-muted">Inscritos</small>
+                    <h5 class="mb-0" th:text="${inscripciones.size()}"></h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inscritos -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Inscritos</h4>
+        <div>
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-download"></i> Exportar
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" th:href="@{'/extraescolares/' + ${actividad.id} + '/export/inscritos/csv'}">Inscritos CSV</a></li>
+                    <li><a class="dropdown-item" th:href="@{'/extraescolares/' + ${actividad.id} + '/export/inscritos/xlsx'}">Inscritos Excel</a></li>
+                    <li><a class="dropdown-item" th:href="@{'/extraescolares/' + ${actividad.id} + '/export/inscritos/pdf'}">Inscritos PDF</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" th:href="@{'/extraescolares/' + ${actividad.id} + '/export/totales/csv'}">Totales CSV</a></li>
+                    <li><a class="dropdown-item" th:href="@{'/extraescolares/' + ${actividad.id} + '/export/totales/xlsx'}">Totales Excel</a></li>
+                    <li><a class="dropdown-item" th:href="@{'/extraescolares/' + ${actividad.id} + '/export/totales/pdf'}">Totales PDF</a></li>
+                </ul>
+            </div>
+            <a th:href="@{'/extraescolares/' + ${actividad.id} + '/inscripciones/nueva'}" class="btn btn-sm btn-primary">
+                <i class="bi bi-person-plus"></i> Inscribir alumno
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros de inscritos -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{'/extraescolares/' + ${actividad.id}}" method="get" class="row g-2 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" th:value="${q}" placeholder="Nombre o curso" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option th:each="e : ${estados}" th:value="${e}" th:text="${e.name()}"
+                                th:selected="${estado != null and estado.name() == e.name()}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-outline-primary w-100">Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Alumno</th>
+                    <th>Curso</th>
+                    <th>Modalidad</th>
+                    <th class="text-end">Importe/mes</th>
+                    <th>Estado</th>
+                    <th>Fianza</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="i : ${inscripciones}">
+                    <td th:text="${i.alumno.nombreCompleto}"></td>
+                    <td th:text="${i.alumno.curso}"></td>
+                    <td>
+                        <span class="badge bg-info" th:text="${i.modalidad.name()}"></span>
+                    </td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(i.importeMensualCalculado, 1, 2)} + ' EUR'"></td>
+                    <td>
+                        <span th:if="${i.estado.name() == 'ACTIVA'}" class="badge bg-success">ACTIVA</span>
+                        <span th:if="${i.estado.name() == 'BAJA'}" class="badge bg-secondary">BAJA</span>
+                    </td>
+                    <td>
+                        <span th:if="${i.fianzaEstado == null}" class="text-muted">-</span>
+                        <span th:if="${i.fianzaEstado != null and i.fianzaEstado.name() == 'PENDIENTE'}" class="badge bg-warning text-dark">PENDIENTE</span>
+                        <span th:if="${i.fianzaEstado != null and i.fianzaEstado.name() == 'PAGADA'}" class="badge bg-success">PAGADA</span>
+                        <span th:if="${i.fianzaEstado != null and i.fianzaEstado.name() == 'DEVUELTA'}" class="badge bg-danger">DEVUELTA</span>
+                        <span th:if="${i.fianzaEstado != null and i.fianzaEstado.name() == 'APLICADA'}" class="badge bg-primary">APLICADA</span>
+                    </td>
+                    <td class="text-end">
+                        <a th:href="@{'/extraescolares/' + ${actividad.id} + '/inscripciones/' + ${i.id}}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(inscripciones)}">
+                    <td colspan="7" class="text-center text-muted py-4">
+                        No hay inscritos que coincidan.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

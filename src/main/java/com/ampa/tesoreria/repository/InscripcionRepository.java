@@ -9,13 +9,13 @@ import java.util.Optional;
 
 public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> {
 
-    @EntityGraph(attributePaths = {"alumno", "alumno.socio", "pagosMensuales"})
+    @EntityGraph(attributePaths = {"alumno", "alumno.socio", "pagosMensuales", "devolucionFianza"})
     List<Inscripcion> findByActividadId(Long actividadId);
 
-    @EntityGraph(attributePaths = {"alumno", "actividad", "pagosMensuales"})
+    @EntityGraph(attributePaths = {"alumno", "actividad", "pagosMensuales", "devolucionFianza"})
     List<Inscripcion> findByAlumnoId(Long alumnoId);
 
-    @EntityGraph(attributePaths = {"alumno", "actividad", "pagosMensuales"})
+    @EntityGraph(attributePaths = {"alumno", "actividad", "pagosMensuales", "devolucionFianza"})
     Optional<Inscripcion> findByActividadIdAndAlumnoId(Long actividadId, Long alumnoId);
 
     long countByActividadId(Long actividadId);

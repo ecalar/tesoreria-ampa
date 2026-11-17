@@ -34,16 +34,19 @@ public class InscripcionController {
     // ALTA
     // ------------------------------------------------------------
     @GetMapping("/nueva")
-    public String nueva(@PathVariable Long actividadId, Model model) {
+    public String nueva(@PathVariable Long actividadId,
+                        @RequestParam(required = false) String alumnoCreado,
+                        Model model) {
         InscripcionForm form = new InscripcionForm();
         form.setActividadId(actividadId);
         form.setModalidad(Modalidad.COMPLETO);
 
         model.addAttribute("form", form);
         model.addAttribute("actividad", actividadService.findById(actividadId));
-        model.addAttribute("alumnos", alumnoRepository.findAll());
+        model.addAttribute("alumnos", alumnoService.listarTodos());
         model.addAttribute("modalidades", List.of(Modalidad.COMPLETO, Modalidad.MEDIO));
         model.addAttribute("editando", false);
+        model.addAttribute("returnTo", "/extraescolares/" + actividadId + "/inscripciones/nueva");
         return "extraescolares/inscripcion-form";
     }
 

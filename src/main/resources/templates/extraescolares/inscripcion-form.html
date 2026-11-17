@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Inscripcion')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <h2 th:text="${editando} ? 'Editar inscripcion' : 'Inscribir alumno'"></h2>
+    <p class="text-muted">
+        Actividad: <strong th:text="${actividad.nombre}"></strong>
+    </p>
+
+    <form th:action="${editando} ? @{'/extraescolares/' + ${actividad.id} + '/inscripciones/' + ${form.id} + '/editar'}
+                                  : @{'/extraescolares/' + ${actividad.id} + '/inscripciones/nueva'}"
+          th:object="${form}" method="post" class="mt-4" style="max-width: 800px;">
+
+        <div class="card mb-3">
+            <div class="card-header">Datos de la inscripcion</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Alumno *</label>
+                    <select th:field="*{alumnoId}" class="form-select" required th:disabled="${editando}">
+                        <option value="">-- Selecciona un alumno --</option>
+                        <option th:each="a : ${alumnos}"
+                                th:value="${a.id}"
+                                th:text="${a.nombreCompleto + ' (' + (a.curso != null ? a.curso : 'sin curso') + (a.socio != null ? '' : ' - NO SOCIO') + ')'}"
+                                th:selected="${form.alumnoId != null and form.alumnoId == a.id}"></option>
+                    </select>
+                    <input th:if="${editando}" type="hidden" th:field="*{alumnoId}">
+                    <div th:unless="${editando}" class="mt-2">
+                        <a th:href="@{/alumnos/nuevo-no-socio(returnTo=${returnTo})}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-person-plus"></i> Anadir alumno no socio
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Modalidad *</label>
+                    <select th:field="*{modalidad}" class="form-select" required>
+                        <option th:each="m : ${modalidades}"
+                                th:value="${m}"
+                                th:text="${m.name()}"></option>
+                    </select>
+                    <small class="text-muted">
+                        COMPLETO = mes entero (oct-may). MEDIO = medio mes.
+                    </small>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input type="checkbox" th:field="*{permisoImagen}" class="form-check-input" id="permisoImg">
+                    <label class="form-check-label" for="permisoImg">
+                        Autoriza imagenes para esta actividad (si se desmarca, hereda del socio)
+                    </label>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Observaciones</label>
+                    <textarea th:field="*{observaciones}" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save"></i> <span th:text="${editando} ? 'Guardar cambios' : 'Inscribir'"></span>
+        </button>
+        <a th:href="@{'/extraescolares/' + ${actividad.id}}" class="btn btn-outline-secondary">Cancelar</a>
+    </form>
+</div>
+</body>
+</html>

@@ -19,6 +19,14 @@ public class AlumnoNoSocioController {
     public String nuevo(@RequestParam(required = false) String returnTo, Model model) {
         AlumnoForm form = new AlumnoForm();
         form.setAutorizacionDesplazamientoMedico(false);
+
+        // 4 huecos vacios para contactos de emergencia
+        for (int i = 1; i <= 4; i++) {
+            AlumnoForm.ContactoForm c = new AlumnoForm.ContactoForm();
+            c.setOrden(i);
+            form.getContactos().add(c);
+        }
+
         model.addAttribute("form", form);
         model.addAttribute("returnTo", returnTo);
         model.addAttribute("editando", false);

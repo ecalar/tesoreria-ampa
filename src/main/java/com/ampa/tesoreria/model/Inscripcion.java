@@ -1,6 +1,7 @@
 package com.ampa.tesoreria.model;
 
 import com.ampa.tesoreria.model.enums.EstadoFianza;
+import com.ampa.tesoreria.model.enums.EstadoInscripcion;
 import com.ampa.tesoreria.model.enums.MetodoPago;
 import com.ampa.tesoreria.model.enums.Modalidad;
 import jakarta.persistence.*;
@@ -56,6 +57,11 @@ public class Inscripcion {
 
     @Column(length = 1000)
     private String observaciones;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private EstadoInscripcion estado = EstadoInscripcion.ACTIVA;
 
     // Fianza
 

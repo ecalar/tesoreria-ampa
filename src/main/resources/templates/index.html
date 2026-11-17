@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Inicio')}"></head>
+<body>
+<nav th:replace="~{layout :: navbar}"></nav>
+
+<div class="container mt-4">
+    <h2>Bienvenido/a a Tesorería AMPA</h2>
+    <p class="text-muted">Selecciona un apartado del menú para comenzar.</p>
+
+    <div class="row mt-4">
+        <div class="col-md-4 mb-3">
+            <div class="card"><div class="card-body">
+                <h5 class="card-title">Socios</h5>
+                <p class="card-text">Gestión de socios y cuotas.</p>
+            </div></div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card"><div class="card-body">
+                <h5 class="card-title">Extraescolares</h5>
+                <p class="card-text">Actividades, pagos y fianzas.</p>
+            </div></div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card"><div class="card-body">
+                <h5 class="card-title">Contabilidad</h5>
+                <p class="card-text">Ingresos, gastos y balance.</p>
+            </div></div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

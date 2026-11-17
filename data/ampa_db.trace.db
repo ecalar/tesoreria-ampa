@@ -1,0 +1,4 @@
+2026-11-17 19:18:03.296389+01:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Error de Sintaxis en sentencia SQL "[*]DESC inscripcion"; se esperaba "DELETE, DROP"
+Syntax error in SQL statement "[*]DESC inscripcion"; expected "DELETE, DROP"; SQL statement:
+DESC inscripcion [42001-224]

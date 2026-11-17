@@ -3,6 +3,14 @@
 <head th:replace="~{layout :: head('Inscripcion')}"></head>
 <body>
 <div th:replace="~{layout :: sidebar}"></div>
+<div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+    <span th:text="${success}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+    <span th:text="${error}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
 
 <div class="p-4">
     <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">

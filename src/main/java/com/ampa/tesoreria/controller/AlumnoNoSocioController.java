@@ -38,11 +38,13 @@ public class AlumnoNoSocioController {
                         @RequestParam(required = false) String returnTo,
                         RedirectAttributes redirectAttributes) {
         try {
-            alumnoService.crearNoSocio(form);
+            var alumno = alumnoService.crearNoSocio(form);
             redirectAttributes.addFlashAttribute("success",
                     "Alumno no socio creado: " + form.getNombre() + " " + form.getApellidos());
             if (returnTo != null && !returnTo.isBlank()) {
-                return "redirect:" + returnTo;
+                // Añadimos el id del alumno para preseleccionarlo
+                String sep = returnTo.contains("?") ? "&" : "?";
+                return "redirect:" + returnTo + sep + "alumnoCreado=" + alumno.getId();
             }
             return "redirect:/alumnos";
         } catch (IllegalArgumentException e) {

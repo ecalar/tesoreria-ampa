@@ -35,11 +35,14 @@ public class InscripcionController {
     // ------------------------------------------------------------
     @GetMapping("/nueva")
     public String nueva(@PathVariable Long actividadId,
-                        @RequestParam(required = false) String alumnoCreado,
+                        @RequestParam(required = false) Long alumnoCreado,
                         Model model) {
         InscripcionForm form = new InscripcionForm();
         form.setActividadId(actividadId);
         form.setModalidad(Modalidad.COMPLETO);
+        if (alumnoCreado != null) {
+            form.setAlumnoId(alumnoCreado);   // ← preselección
+        }
 
         model.addAttribute("form", form);
         model.addAttribute("actividad", actividadService.findById(actividadId));

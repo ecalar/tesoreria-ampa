@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Mi perfil')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+    <h2>Mi perfil</h2>
+    <p class="text-muted">Usuario: <strong th:text="${username}"></strong></p>
+
+    <form th:action="@{/perfil/cambiar-password}" th:object="${form}" method="post" style="max-width: 500px;" class="mt-4">
+        <div class="mb-3">
+            <label class="form-label">Contrasena actual</label>
+            <input type="password" th:field="*{passwordActual}" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Contrasena nueva</label>
+            <input type="password" th:field="*{passwordNueva}" class="form-control" required minlength="6">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Repetir contrasena nueva</label>
+            <input type="password" th:field="*{passwordConfirmacion}" class="form-control" required minlength="6">
+        </div>
+        <button type="submit" class="btn btn-primary">Cambiar contrasena</button>
+    </form>
+</div>
+</body>
+</html>

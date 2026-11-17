@@ -2,34 +2,43 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout :: head('Inicio')}"></head>
 <body>
-<nav th:replace="~{layout :: navbar}"></nav>
+<div th:replace="~{layout :: sidebar}"></div>
 
-<div class="container mt-4">
+<div class="p-4">
+    <div th:if="${sinCurso}" class="alert alert-warning">
+        No hay ningun curso escolar abierto. <a th:href="@{/cursos}">Crea uno aquí</a>.
+    </div>
     <h2>Bienvenido/a a Tesorería AMPA</h2>
-    <p class="text-muted">Selecciona un apartado del menú para comenzar.</p>
+    <p class="text-muted">Panel principal del programa de tesorería.</p>
 
     <div class="row mt-4">
-        <div class="col-md-4 mb-3">
-            <div class="card"><div class="card-body">
-                <h5 class="card-title">Socios</h5>
-                <p class="card-text">Gestión de socios y cuotas.</p>
-            </div></div>
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Curso activo</h5>
+                    <div th:if="${cursoActivo}">
+                        <p class="mb-1"><strong th:text="${cursoActivo.nombre}"></strong></p>
+                        <p class="text-muted mb-0">
+                            <span th:text="${#temporals.format(cursoActivo.fechaInicio, 'dd/MM/yyyy')}"></span>
+                            -
+                            <span th:text="${#temporals.format(cursoActivo.fechaFin, 'dd/MM/yyyy')}"></span>
+                        </p>
+                    </div>
+                    <p th:if="${cursoActivo == null}" class="text-warning mb-0">Sin curso activo</p>
+                </div>
+            </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card"><div class="card-body">
-                <h5 class="card-title">Extraescolares</h5>
-                <p class="card-text">Actividades, pagos y fianzas.</p>
-            </div></div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card"><div class="card-body">
-                <h5 class="card-title">Contabilidad</h5>
-                <p class="card-text">Ingresos, gastos y balance.</p>
-            </div></div>
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Accesos rapidos</h5>
+                    <a th:href="@{/socios}" class="btn btn-sm btn-outline-primary mb-1">Socios</a>
+                    <a th:href="@{/extraescolares}" class="btn btn-sm btn-outline-primary mb-1">Extraescolares</a>
+                    <a th:href="@{/ajustes}" class="btn btn-sm btn-outline-secondary mb-1">Ajustes</a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
-<script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
 </body>
 </html>

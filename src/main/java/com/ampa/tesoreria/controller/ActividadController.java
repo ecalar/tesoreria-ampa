@@ -6,6 +6,7 @@ import com.ampa.tesoreria.model.Inscripcion;
 import com.ampa.tesoreria.model.PagoMensual;
 import com.ampa.tesoreria.model.enums.EstadoFianza;
 import com.ampa.tesoreria.model.enums.EstadoInscripcion;
+import com.ampa.tesoreria.model.enums.TipoActividad;
 import com.ampa.tesoreria.service.ActividadService;
 import com.ampa.tesoreria.service.InscripcionService;
 import com.ampa.tesoreria.util.ExportUtils;
@@ -77,7 +78,8 @@ public class ActividadController {
     public String crear(@ModelAttribute("form") ActividadForm form,
                         RedirectAttributes redirectAttributes) {
         try {
-            Actividad a = actividadService.crear(form);
+            // DESPUÉS
+            Actividad a = actividadService.crear(TipoActividad.EXTRAESCOLAR, form);
             redirectAttributes.addFlashAttribute("success",
                     "Actividad creada: " + a.getNombre());
             return "redirect:/extraescolares/" + a.getId();

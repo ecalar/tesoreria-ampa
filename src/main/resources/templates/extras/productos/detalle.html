@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Producto')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 th:text="${producto.nombre}"></h2>
+        <div>
+            <a th:href="@{'/extras/' + ${producto.id} + '/editar'}" class="btn btn-outline-secondary">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            <form th:action="@{'/extras/' + ${producto.id} + '/borrar'}" method="post" class="d-inline"
+                  onsubmit="return confirm('Borrar este producto? Solo es posible si no tiene pedidos.');">
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i> Borrar
+                </button>
+            </form>
+            <a th:href="@{/extras}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">Datos del producto</div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Descripcion</dt>
+                <dd class="col-sm-9" th:text="${producto.descripcion}"></dd>
+                <dt class="col-sm-3">Precio unitario</dt>
+                <dd class="col-sm-9" th:text="${#numbers.formatDecimal(producto.precioUnitario, 1, 2)} + ' EUR'"></dd>
+                <dt class="col-sm-3">Estado</dt>
+                <dd class="col-sm-9">
+                    <span th:if="${producto.activo}" class="badge bg-success">ACTIVO</span>
+                    <span th:unless="${producto.activo}" class="badge bg-secondary">INACTIVO</span>
+                </dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body py-2">
+                    <small class="text-muted">Pedidos</small>
+                    <h5 class="mb-0" th:text="${pedidos.size()}"></h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body py-2">
+                    <small class="text-muted">Unidades</small>
+                    <h5 class="mb-0" th:text="${totalUnidades}"></h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body py-2">
+                    <small class="text-muted">Cobrado</small>
+                    <h5 class="mb-0 text-success"
+                        th:text="${#numbers.formatDecimal(totalCobrado, 1, 2)} + ' EUR'"></h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body py-2">
+                    <small class="text-muted">Pendiente</small>
+                    <h5 class="mb-0 text-danger"
+                        th:text="${#numbers.formatDecimal(totalPendiente, 1, 2)} + ' EUR'"></h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Pedidos</h4>
+        <div>
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-download"></i> Exportar
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" th:href="@{'/extras/' + ${producto.id} + '/export/pedidos/csv'}">Pedidos CSV</a></li>
+                    <li><a class="dropdown-item" th:href="@{'/extras/' + ${producto.id} + '/export/pedidos/xlsx'}">Pedidos Excel</a></li>
+                    <li><a class="dropdown-item" th:href="@{'/extras/' + ${producto.id} + '/export/pedidos/pdf'}">Pedidos PDF</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" th:href="@{'/extras/' + ${producto.id} + '/export/totales/csv'}">Totales CSV</a></li>
+                    <li><a class="dropdown-item" th:href="@{'/extras/' + ${producto.id} + '/export/totales/xlsx'}">Totales Excel</a></li>
+                    <li><a class="dropdown-item" th:href="@{'/extras/' + ${producto.id} + '/export/totales/pdf'}">Totales PDF</a></li>
+                </ul>
+            </div>
+            <a th:href="@{'/extras/' + ${producto.id} + '/pedidos/nuevo'}" class="btn btn-sm btn-primary">
+                <i class="bi bi-cart-plus"></i> Nuevo pedido
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Alumno</th>
+                    <th>Curso</th>
+                    <th>Talla</th>
+                    <th class="text-center">Cantidad</th>
+                    <th class="text-end">Precio</th>
+                    <th class="text-end">Subtotal</th>
+                    <th>Pagado</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="pp : ${pedidos}">
+                    <td th:text="${pp.alumno.nombreCompleto}"></td>
+                    <td th:text="${pp.alumno.curso}"></td>
+                    <td th:text="${pp.talla}"></td>
+                    <td class="text-center" th:text="${pp.cantidad}"></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(pp.precioUnitarioAplicado, 1, 2)} + ' EUR'"></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(pp.subtotal, 1, 2)} + ' EUR'"></td>
+                    <td>
+                        <span th:if="${pp.pagado}" class="badge bg-success">PAGADO</span>
+                        <span th:unless="${pp.pagado}" class="badge bg-warning text-dark">PENDIENTE</span>
+                    </td>
+                    <td class="text-end">
+                        <form th:unless="${pp.pagado}"
+                              th:action="@{'/extras/' + ${producto.id} + '/pedidos/' + ${pp.id} + '/pagar'}"
+                              method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-success" title="Marcar pagado">
+                                <i class="bi bi-check"></i>
+                            </button>
+                        </form>
+                        <form th:if="${pp.pagado}"
+                              th:action="@{'/extras/' + ${producto.id} + '/pedidos/' + ${pp.id} + '/desmarcar'}"
+                              method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-warning" title="Desmarcar">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </form>
+                        <a th:href="@{'/extras/' + ${producto.id} + '/pedidos/' + ${pp.id} + '/editar'}"
+                           class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form th:action="@{'/extras/' + ${producto.id} + '/pedidos/' + ${pp.id} + '/borrar'}"
+                              method="post" class="d-inline"
+                              onsubmit="return confirm('Borrar este pedido?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(pedidos)}">
+                    <td colspan="8" class="text-center text-muted py-4">
+                        No hay pedidos para este producto.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

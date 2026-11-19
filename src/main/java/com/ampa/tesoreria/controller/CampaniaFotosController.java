@@ -3,6 +3,7 @@ package com.ampa.tesoreria.controller;
 import com.ampa.tesoreria.dto.CampaniaFotosForm;
 import com.ampa.tesoreria.model.CampaniaFotos;
 import com.ampa.tesoreria.service.CampaniaFotosService;
+import com.ampa.tesoreria.service.PedidoFotoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,6 +19,7 @@ import java.util.List;
 public class CampaniaFotosController {
 
     private final CampaniaFotosService campaniaService;
+    private final PedidoFotoService pedidoService;
 
     // ------------------------------------------------------------
     // LISTADO
@@ -107,8 +109,12 @@ public class CampaniaFotosController {
     public String detalle(@PathVariable Long id, Model model) {
         CampaniaFotos campania = campaniaService.findById(id);
 
+        // Cargamos los pedidos con @EntityGraph (alumno + grupos + hermanos)
+        List<com.ampa.tesoreria.model.PedidoFoto> pedidos =
+                pedidoService.listarPorCampania(id, null, null);
+
         model.addAttribute("campania", campania);
-        model.addAttribute("pedidos", campania.getPedidos());
+        model.addAttribute("pedidos", pedidos);
         model.addAttribute("totalRecaudado", campaniaService.totalRecaudado(campania));
         model.addAttribute("totalCobrado", campaniaService.totalCobrado(campania));
         model.addAttribute("totalDevuelto", campaniaService.totalDevuelto(campania));

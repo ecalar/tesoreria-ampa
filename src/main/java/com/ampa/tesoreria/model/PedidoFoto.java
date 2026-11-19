@@ -7,7 +7,9 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "pedido_foto",
@@ -97,7 +99,7 @@ public class PedidoFoto {
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<HermanoFoto> hermanos = new ArrayList<>();
+    private Set<HermanoFoto> hermanos = new HashSet<>();
 
     // Helpers
 

@@ -12,7 +12,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +46,15 @@ public class PedidoFotoService {
         return pedidos;
     }
 
+    public PedidoFoto findByIdCompleto(Long id) {
+        PedidoFoto p = findById(id);
+        // Forzar la carga de hermanos dentro de la transacción
+        if (p.getHermanos() != null) {
+            p.getHermanos().size();
+        }
+        return p;
+    }
+
     public PedidoFoto findById(Long id) {
         return pedidoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado: " + id));
@@ -65,7 +76,6 @@ public class PedidoFotoService {
                     "El alumno " + alumno.getNombreCompleto() + " ya tiene un pedido en esta campaña");
         }
 
-        // Validar cantidades mínimas
         int numLotes = form.getNumLotes() != null ? form.getNumLotes() : 0;
         int numIndividuales = form.getNumIndividuales() != null ? form.getNumIndividuales() : 0;
         int totalGrupales = form.getGrupos() == null ? 0
@@ -77,7 +87,6 @@ public class PedidoFotoService {
             throw new IllegalArgumentException("El pedido debe tener al menos un lote, grupal o individual");
         }
 
-        // Calcular totales con los precios de la campaña
         BigDecimal precioLote = campania.getPrecioLote();
         BigDecimal precioGrupal = campania.getPrecioGrupal();
         BigDecimal precioIndividual = campania.getPrecioIndividual();
@@ -89,9 +98,7 @@ public class PedidoFotoService {
         subtotal = subtotal.add(precioGrupal.multiply(BigDecimal.valueOf(totalGrupales)));
         subtotal = subtotal.add(precioIndividual.multiply(BigDecimal.valueOf(numIndividuales)));
 
-        // Descuento solo si el alumno tiene socio
         BigDecimal descuentoAplicado = (alumno.getSocio() != null) ? descuento : BigDecimal.ZERO;
-
         BigDecimal total = aplicarDescuento(subtotal, descuentoAplicado);
 
         PedidoFoto pedido = PedidoFoto.builder()
@@ -111,32 +118,28 @@ public class PedidoFotoService {
                 .fechaPedido(LocalDate.now())
                 .observaciones(form.getObservaciones())
                 .grupos(new ArrayList<>())
-                .hermanos(new ArrayList<>())
+                .hermanos(new HashSet<>())
                 .build();
 
-        // Añadir grupos (solo los que tienen cantidad > 0)
         if (form.getGrupos() != null) {
             for (PedidoFotoForm.GrupoForm g : form.getGrupos()) {
                 if (g.getCantidad() != null && g.getCantidad() > 0
                         && g.getCurso() != null && !g.getCurso().isBlank()) {
-                    GrupoFoto grupo = GrupoFoto.builder()
+                    pedido.addGrupo(GrupoFoto.builder()
                             .curso(g.getCurso())
                             .cantidad(g.getCantidad())
-                            .build();
-                    pedido.addGrupo(grupo);
+                            .build());
                 }
             }
         }
 
-        // Añadir hermanos (solo los que tienen nombre)
         if (form.getHermanos() != null) {
             for (PedidoFotoForm.HermanoForm h : form.getHermanos()) {
                 if (h.getNombre() != null && !h.getNombre().isBlank()) {
-                    HermanoFoto hermano = HermanoFoto.builder()
+                    pedido.addHermano(HermanoFoto.builder()
                             .nombre(h.getNombre())
                             .curso(h.getCurso())
-                            .build();
-                    pedido.addHermano(hermano);
+                            .build());
                 }
             }
         }
@@ -145,7 +148,7 @@ public class PedidoFotoService {
     }
 
     // ------------------------------------------------------------
-    // ACTUALIZAR (solo si no está pagado)
+    // ACTUALIZAR
     // ------------------------------------------------------------
     @Transactional
     public PedidoFoto actualizar(Long id, PedidoFotoForm form) {
@@ -166,7 +169,6 @@ public class PedidoFotoService {
             throw new IllegalArgumentException("El pedido debe tener al menos un lote, grupal o individual");
         }
 
-        // Recalcular con los precios guardados (snapshot) para no romper el histórico
         BigDecimal subtotal = BigDecimal.ZERO;
         subtotal = subtotal.add(pedido.getPrecioLoteAplicado().multiply(BigDecimal.valueOf(numLotes)));
         subtotal = subtotal.add(pedido.getPrecioGrupalAplicado().multiply(BigDecimal.valueOf(totalGrupales)));
@@ -181,7 +183,6 @@ public class PedidoFotoService {
         pedido.setMetodoPago(form.getMetodoPago());
         pedido.setObservaciones(form.getObservaciones());
 
-        // Reemplazar grupos
         pedido.getGrupos().clear();
         if (form.getGrupos() != null) {
             for (PedidoFotoForm.GrupoForm g : form.getGrupos()) {
@@ -195,7 +196,6 @@ public class PedidoFotoService {
             }
         }
 
-        // Reemplazar hermanos
         pedido.getHermanos().clear();
         if (form.getHermanos() != null) {
             for (PedidoFotoForm.HermanoForm h : form.getHermanos()) {
@@ -236,8 +236,8 @@ public class PedidoFotoService {
     }
 
     // ------------------------------------------------------------
-// DEVOLUCION
-// ------------------------------------------------------------
+    // DEVOLUCION
+    // ------------------------------------------------------------
     @Transactional
     public void registrarDevolucion(Long pedidoId, LocalDate fecha, BigDecimal importe,
                                     MetodoPago metodo, String observaciones) {
@@ -297,6 +297,8 @@ public class PedidoFotoService {
                 form.getGrupos().add(gf);
             }
         }
+
+        // Los hermanos son Set -> los volvemos a una List del form
         if (p.getHermanos() != null) {
             for (HermanoFoto h : p.getHermanos()) {
                 PedidoFotoForm.HermanoForm hf = new PedidoFotoForm.HermanoForm();

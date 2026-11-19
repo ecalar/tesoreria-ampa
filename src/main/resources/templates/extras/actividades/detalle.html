@@ -5,8 +5,6 @@
 <div th:replace="~{layout :: sidebar}"></div>
 
 <div class="p-4">
-    <div class="mb-3">
-    </div>
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
         <span th:text="${success}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -15,11 +13,14 @@
         <span th:text="${error}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-    <a th:href="@{/extras/actividades}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left"></i> Volver </a>
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 th:text="${actividad.nombre}"></h2>
+        <div>
+            <a th:href="@{/extras/actividades}" class="btn btn-outline-secondary btn-sm mb-2">
+                <i class="bi bi-arrow-left"></i> Volver a Actividades
+            </a>
+            <h2 class="mb-0" th:text="${actividad.nombre}"></h2>
+        </div>
         <div>
             <a th:href="@{'/extras/actividades/' + ${actividad.id} + '/editar'}"
                class="btn btn-outline-secondary">
@@ -32,13 +33,9 @@
                     <i class="bi bi-trash"></i> Borrar
                 </button>
             </form>
-            <a th:href="@{/extras/actividades}" class="btn btn-outline-primary">
-                <i class="bi bi-arrow-left"></i> Volver
-            </a>
         </div>
     </div>
 
-    <!-- Datos de la actividad -->
     <div class="card mb-4">
         <div class="card-header">Datos de la actividad extra</div>
         <div class="card-body">
@@ -51,51 +48,53 @@
                             -
                             <span th:text="${#temporals.format(actividad.fechaFin, 'dd/MM/yyyy')}"></span>
                         </dd>
+                        <dt class="col-sm-5">Horario</dt>
                         <dd class="col-sm-7" th:text="${actividad.horario}"></dd>
                     </dl>
                 </div>
                 <div class="col-md-6">
                     <dl class="row mb-0">
-                        <dt class="col-sm-5">Precio completo</dt>
-                        <dd class="col-sm-7"
-                            th:text="${#numbers.formatDecimal(actividad.precioMesCompleto, 1, 2)} + ' EUR'"></dd>
+                        <dt class="col-sm-5">Precio</dt>
+                        <dd class="col-sm-7">
+                            <span th:if="${actividad.precioMesCompleto != null and actividad.precioMesCompleto.compareTo(0) > 0}"
+                                  th:text="${#numbers.formatDecimal(actividad.precioMesCompleto, 1, 2)} + ' EUR'"></span>
+                            <span th:if="${actividad.precioMesCompleto == null or actividad.precioMesCompleto.compareTo(0) == 0}"
+                                  class="text-success">Gratis</span>
+                        </dd>
                         <dt class="col-sm-5">Descuento socio</dt>
-                        <dd class="col-sm-7" th:text="${actividad.descuentoSocioPorcentaje} + ' %'"></dd>
+                        <dd class="col-sm-7">
+                            <span th:if="${actividad.descuentoSocioPorcentaje != null}"
+                                  th:text="${actividad.descuentoSocioPorcentaje} + ' %'"></span>
+                            <span th:if="${actividad.descuentoSocioPorcentaje == null}"
+                                  class="text-muted">Sin descuento</span>
+                        </dd>
                     </dl>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Totales -->
     <div class="row mb-4">
         <div class="col-md-4">
-            <div class="card bg-light">
-                <div class="card-body py-2">
-                    <small class="text-muted">Cobrado</small>
-                    <h5 class="mb-0" th:text="${#numbers.formatDecimal(totalPagado, 1, 2)} + ' EUR'"></h5>
-                </div>
-            </div>
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Cobrado</small>
+                <h5 class="mb-0" th:text="${#numbers.formatDecimal(totalPagado, 1, 2)} + ' EUR'"></h5>
+            </div></div>
         </div>
         <div class="col-md-4">
-            <div class="card bg-light">
-                <div class="card-body py-2">
-                    <small class="text-muted">Pendiente</small>
-                    <h5 class="mb-0" th:text="${#numbers.formatDecimal(totalPendiente, 1, 2)} + ' EUR'"></h5>
-                </div>
-            </div>
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Pendiente</small>
+                <h5 class="mb-0" th:text="${#numbers.formatDecimal(totalPendiente, 1, 2)} + ' EUR'"></h5>
+            </div></div>
         </div>
         <div class="col-md-4">
-            <div class="card bg-light">
-                <div class="card-body py-2">
-                    <small class="text-muted">Inscritos</small>
-                    <h5 class="mb-0" th:text="${inscripciones.size()}"></h5>
-                </div>
-            </div>
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Inscritos</small>
+                <h5 class="mb-0" th:text="${inscripciones.size()}"></h5>
+            </div></div>
         </div>
     </div>
 
-    <!-- Inscritos -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Inscritos</h4>
         <a th:href="@{'/extras/actividades/' + ${actividad.id} + '/inscripciones/nueva'}"
@@ -104,7 +103,6 @@
         </a>
     </div>
 
-    <!-- Filtros de inscritos -->
     <div class="card mb-3">
         <div class="card-body">
             <form th:action="@{'/extras/actividades/' + ${actividad.id}}" method="get"
@@ -136,8 +134,6 @@
                 <tr>
                     <th>Alumno</th>
                     <th>Curso</th>
-                    <th>Modalidad</th>
-                    <th>Dias</th>
                     <th class="text-end">Importe</th>
                     <th>Estado</th>
                     <th></th>
@@ -147,8 +143,6 @@
                 <tr th:each="i : ${inscripciones}">
                     <td th:text="${i.alumno.nombreCompleto}"></td>
                     <td th:text="${i.alumno.curso}"></td>
-                    <td><span class="badge bg-info" th:text="${i.modalidad.name()}"></span></td>
-                    <td th:text="${i.diasAsistidos != null ? i.diasAsistidos : ''}"></td>
                     <td class="text-end"
                         th:text="${#numbers.formatDecimal(i.importeMensualCalculado, 1, 2)} + ' EUR'"></td>
                     <td>
@@ -163,7 +157,7 @@
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(inscripciones)}">
-                    <td colspan="7" class="text-center text-muted py-4">
+                    <td colspan="5" class="text-center text-muted py-4">
                         No hay inscritos que coincidan.
                     </td>
                 </tr>

@@ -53,18 +53,25 @@
         </div>
 
         <div class="card mb-3">
-            <div class="card-header">Precios y descuento</div>
+            <div class="card-header">Precio y descuento</div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Precio completo *</label>
-                        <input type="number" step="0.01" th:field="*{precioMesCompleto}"
-                               class="form-control" required>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Descuento socio (%)</label>
-                        <input type="number" step="0.01" th:field="*{descuentoSocioPorcentaje}"
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Precio (EUR)</label>
+                        <input type="number" step="0.01" min="0" th:field="*{precioMesCompleto}"
                                class="form-control">
+                        <small class="text-muted">
+                            Puede ser 0 si la actividad es gratuita.
+                        </small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Descuento socio (%)</label>
+                        <input type="number" step="0.01" min="0" max="100"
+                               th:field="*{descuentoSocioPorcentaje}"
+                               class="form-control" placeholder="0">
+                        <small class="text-muted">
+                            Opcional. Si se deja vacio, no se aplica descuento.
+                        </small>
                     </div>
                 </div>
             </div>

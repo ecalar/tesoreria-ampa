@@ -17,9 +17,9 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <a th:href="@{/extras}" class="btn btn-outline-secondary btn-sm mb-2">
-                <i class="bi bi-arrow-left"></i> Volver
+                <i class="bi bi-arrow-left"></i> Volver a Extras
             </a>
-            <h2 class="mb-0">Extras - Actividades</h2>
+            <h2 class="mb-0">Actividades extras</h2>
         </div>
         <a th:href="@{/extras/actividades/nueva}" class="btn btn-primary">
             <i class="bi bi-plus-lg"></i> Nueva actividad extra
@@ -32,7 +32,7 @@
                 <div class="col-md-9">
                     <label class="form-label">Buscar por nombre</label>
                     <input type="text" name="q" th:value="${q}" class="form-control"
-                           placeholder="Ej: Taller de cocina">
+                           placeholder="Ej: Merienda">
                 </div>
                 <div class="col-md-3">
                     <button type="submit" class="btn btn-outline-primary w-100">
@@ -88,23 +88,27 @@
                     <th>Nombre</th>
                     <th>Fechas</th>
                     <th>Horario</th>
-                    <th class="text-end">Completo</th>
+                    <th class="text-end">Precio</th>
                     <th class="text-center">Inscritos</th>
                     <th></th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="a : ${actividades}">
-                    <td><a th:href="@{'/extras/actividades/' + ${a.id}}" th:text="${a.nombre}"></a></td>
+                    <td>
+                        <a th:href="@{'/extras/actividades/' + ${a.id}}" th:text="${a.nombre}"></a>
+                    </td>
                     <td>
                         <span th:text="${#temporals.format(a.fechaInicio, 'dd/MM/yy')}"></span>
                         -
                         <span th:text="${#temporals.format(a.fechaFin, 'dd/MM/yy')}"></span>
                     </td>
                     <td th:text="${a.horario}"></td>
-                    <td class="text-end"
-                        th:text="${#numbers.formatDecimal(a.precioMesCompleto, 1, 2)} + ' EUR'"></td>
-                        <span th:unless="${a.precioPorDia != null}" class="text-muted">-</span>
+                    <td class="text-end">
+                        <span th:if="${a.precioMesCompleto != null and a.precioMesCompleto.compareTo(0) > 0}"
+                              th:text="${#numbers.formatDecimal(a.precioMesCompleto, 1, 2)} + ' EUR'"></span>
+                        <span th:if="${a.precioMesCompleto == null or a.precioMesCompleto.compareTo(0) == 0}"
+                              class="text-success">Gratis</span>
                     </td>
                     <td class="text-center">
                         <span class="badge bg-secondary"
@@ -122,7 +126,7 @@
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(actividades)}">
-                    <td colspan="7" class="text-center text-muted py-4">
+                    <td colspan="6" class="text-center text-muted py-4">
                         No hay actividades.
                     </td>
                 </tr>

@@ -66,7 +66,7 @@ public class ActividadService {
                 .horario(form.getHorario())
                 .precioMesCompleto(form.getPrecioMesCompleto())
                 .precioMedioMes(tipo == TipoActividad.EXTRA_ACTIVIDAD ? null : form.getPrecioMedioMes())
-                .precioPorDia(tipo != TipoActividad.EXTRAESCOLAR ? form.getPrecioPorDia() : null)
+                .precioPorDia(tipo == TipoActividad.ESCUELA ? form.getPrecioPorDia() : null)
                 .descuentoSocioPorcentaje(form.getDescuentoSocioPorcentaje() != null
                         ? form.getDescuentoSocioPorcentaje() : BigDecimal.ZERO)
                 // La fianza SOLO se persiste si es extraescolar
@@ -93,7 +93,7 @@ public class ActividadService {
         a.setPrecioMedioMes(a.getTipo() == TipoActividad.EXTRA_ACTIVIDAD
                 ? null
                 : form.getPrecioMedioMes());
-        a.setPrecioPorDia(a.getTipo() != TipoActividad.EXTRAESCOLAR ? form.getPrecioPorDia() : null);
+        a.setPrecioPorDia(a.getTipo() == TipoActividad.ESCUELA ? form.getPrecioPorDia() : null);
         a.setDescuentoSocioPorcentaje(form.getDescuentoSocioPorcentaje() != null
                 ? form.getDescuentoSocioPorcentaje() : BigDecimal.ZERO);
 

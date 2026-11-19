@@ -134,10 +134,25 @@ public class InscripcionService {
      * Todos con el mismo importe y pagado=false.
      */
     private void generarPagosMensuales(Inscripcion inscripcion, Actividad actividad, BigDecimal importeMensual) {
-        YearMonth desde = YearMonth.from(actividad.getFechaInicio());
-        YearMonth hasta = YearMonth.from(actividad.getFechaFin());
+        // Actividades extras: SIEMPRE un pago unico, en el mes de la fecha de inicio
+        if (actividad.getTipo() == com.ampa.tesoreria.model.enums.TipoActividad.EXTRA_ACTIVIDAD) {
+            PagoMensual pago = PagoMensual.builder()
+                    .inscripcion(inscripcion)
+                    .mes(java.time.YearMonth.from(actividad.getFechaInicio()))
+                    .importe(importeMensual)
+                    .pagado(false)
+                    .cubiertoPorFianza(false)
+                    .observaciones("Pago unico")
+                    .build();
+            inscripcion.addPagoMensual(pago);
+            return;
+        }
 
-        YearMonth actual = desde;
+        // Extraescolares y escuelas: un pago por cada mes del periodo
+        java.time.YearMonth desde = java.time.YearMonth.from(actividad.getFechaInicio());
+        java.time.YearMonth hasta = java.time.YearMonth.from(actividad.getFechaFin());
+
+        java.time.YearMonth actual = desde;
         while (!actual.isAfter(hasta)) {
             PagoMensual pago = PagoMensual.builder()
                     .inscripcion(inscripcion)

@@ -44,12 +44,9 @@
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Modalidad *</label>
-                    <select th:field="*{modalidad}" id="modalidadSelect" class="form-select" required>
-                        <option th:each="m : ${modalidades}" th:value="${m}" th:text="${m.name()}"></option>
-                    </select>
-                    <small class="text-muted" th:text="${textoModalidad}">COMPLETO = periodo completo</small>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <span th:text="${textoModalidad}">Esta actividad es de pago unico.</span>
                 </div>
 
                 <div class="form-check mb-3">
@@ -67,30 +64,13 @@
         </div>
 
         <button type="submit" class="btn btn-primary">
-            <i class="bi bi-save"></i> <span th:text="${editando} ? 'Guardar cambios' : 'Inscribir'"></span>
+            <i class="bi bi-save"></i>
+            <span th:text="${editando} ? 'Guardar cambios' : 'Inscribir'"></span>
         </button>
         <a th:href="@{'/extras/actividades/' + ${actividad.id}}" class="btn btn-outline-secondary">
             Cancelar
         </a>
     </form>
 </div>
-
-<script>
-    (function() {
-        var sel = document.getElementById('modalidadSelect');
-        var bloque = document.getElementById('bloquePorDias');
-        function actualizar() {
-            if (sel.value === 'POR_DIAS') {
-                bloque.style.display = 'block';
-            } else {
-                bloque.style.display = 'none';
-            }
-        }
-        if (sel) {
-            sel.addEventListener('change', actualizar);
-            actualizar();
-        }
-    })();
-</script>
 </body>
 </html>

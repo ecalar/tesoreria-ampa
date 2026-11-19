@@ -113,4 +113,15 @@ public class ProductoService {
                 .mapToLong(PedidoProducto::getCantidad)
                 .sum();
     }
+
+    public BigDecimal totalDevuelto(Producto p) {
+        return p.getPedidos().stream()
+                .filter(pp -> pp.getDevolucion() != null)
+                .map(pp -> pp.getDevolucion().getImporte())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal totalNeto(Producto p) {
+        return totalCobrado(p).subtract(totalDevuelto(p));
+    }
 }

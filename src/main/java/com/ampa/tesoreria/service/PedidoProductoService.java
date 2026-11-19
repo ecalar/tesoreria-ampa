@@ -2,8 +2,10 @@ package com.ampa.tesoreria.service;
 
 import com.ampa.tesoreria.dto.PedidoProductoForm;
 import com.ampa.tesoreria.model.Alumno;
+import com.ampa.tesoreria.model.DevolucionPedidoProducto;
 import com.ampa.tesoreria.model.PedidoProducto;
 import com.ampa.tesoreria.model.Producto;
+import com.ampa.tesoreria.model.enums.MetodoPago;
 import com.ampa.tesoreria.repository.PedidoProductoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -113,6 +115,48 @@ public class PedidoProductoService {
         PedidoProducto p = findById(id);
         p.setPagado(false);
         p.setFechaPago(null);
+        pedidoRepository.save(p);
+    }
+
+    // ------------------------------------------------------------
+// DEVOLUCION
+// ------------------------------------------------------------
+    @Transactional
+    public void registrarDevolucion(Long pedidoId, LocalDate fecha, BigDecimal importe,
+                                    MetodoPago metodo, String observaciones) {
+        PedidoProducto p = findById(pedidoId);
+        if (!p.isPagado()) {
+            throw new IllegalStateException(
+                    "Solo se puede devolver un pedido que ya este pagado");
+        }
+        if (p.getDevolucion() != null) {
+            throw new IllegalStateException("Este pedido ya tiene una devolucion registrada");
+        }
+        if (importe == null || importe.signum() <= 0) {
+            throw new IllegalArgumentException("El importe a devolver debe ser mayor que 0");
+        }
+        if (importe.compareTo(p.getSubtotal()) > 0) {
+            throw new IllegalArgumentException(
+                    "El importe a devolver no puede superar el subtotal (" + p.getSubtotal() + " EUR)");
+        }
+
+        DevolucionPedidoProducto dev = DevolucionPedidoProducto.builder()
+                .fecha(fecha != null ? fecha : LocalDate.now())
+                .importe(importe)
+                .metodoPago(metodo)
+                .observaciones(observaciones)
+                .build();
+        p.setDevolucion(dev);
+        pedidoRepository.save(p);
+    }
+
+    @Transactional
+    public void eliminarDevolucion(Long pedidoId) {
+        PedidoProducto p = findById(pedidoId);
+        if (p.getDevolucion() == null) {
+            throw new IllegalStateException("Este pedido no tiene devolucion registrada");
+        }
+        p.setDevolucion(null);
         pedidoRepository.save(p);
     }
 

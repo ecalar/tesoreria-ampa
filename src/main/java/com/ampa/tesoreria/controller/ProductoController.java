@@ -36,6 +36,12 @@ public class ProductoController {
         BigDecimal totalRecaudado = BigDecimal.ZERO;
         BigDecimal totalCobrado = BigDecimal.ZERO;
         BigDecimal totalPendiente = BigDecimal.ZERO;
+        BigDecimal totalDevuelto = BigDecimal.ZERO;
+        for (Producto p : productos) {
+            totalDevuelto = totalDevuelto.add(productoService.totalDevuelto(p));
+        }
+        model.addAttribute("totalDevuelto", totalDevuelto);
+        model.addAttribute("totalNeto", totalCobrado.subtract(totalDevuelto));
         long totalUnidades = 0;
 
         for (Producto p : productos) {
@@ -122,6 +128,8 @@ public class ProductoController {
         model.addAttribute("totalCobrado", productoService.totalCobrado(producto));
         model.addAttribute("totalPendiente", productoService.totalPendiente(producto));
         model.addAttribute("totalUnidades", productoService.totalUnidades(producto));
+        model.addAttribute("totalDevuelto", productoService.totalDevuelto(producto));
+        model.addAttribute("totalNeto", productoService.totalNeto(producto));
         return "extras/productos/detalle";
     }
 
@@ -181,7 +189,7 @@ public class ProductoController {
         List<String> headers = List.of(
                 "Alumno", "Curso", "Talla", "Cantidad",
                 "Precio unit. (EUR)", "Subtotal (EUR)",
-                "Pagado", "Fecha pedido", "Observaciones");
+                "Pagado", "Devuelto (EUR)", "Fecha pedido", "Observaciones");
 
         List<List<String>> rows = new ArrayList<>();
         for (PedidoProducto pp : pedidos) {
@@ -193,6 +201,7 @@ public class ProductoController {
                     ExportUtils.money(pp.getPrecioUnitarioAplicado()),
                     ExportUtils.money(pp.getSubtotal()),
                     pp.isPagado() ? "SI" : "NO",
+                    pp.getDevolucion() != null ? ExportUtils.money(pp.getDevolucion().getImporte()) : "",
                     pp.getFechaPedido() != null ? pp.getFechaPedido().toString() : "",
                     safe(pp.getObservaciones())
             ));
@@ -213,10 +222,12 @@ public class ProductoController {
                 List.of("Precio unitario (EUR)", ExportUtils.money(producto.getPrecioUnitario())),
                 List.of("Pedidos", String.valueOf(producto.getPedidos().size())),
                 List.of("Unidades totales", String.valueOf(productoService.totalUnidades(producto))),
-                List.of("Total cobrado (EUR)", ExportUtils.money(productoService.totalCobrado(producto))),
-                List.of("Total pendiente (EUR)", ExportUtils.money(productoService.totalPendiente(producto))),
-                List.of("Total facturado (EUR)", ExportUtils.money(productoService.totalRecaudado(producto)))
+                List.of("Cobrado (EUR)", ExportUtils.money(productoService.totalCobrado(producto))),
+                List.of("Devuelto (EUR)", ExportUtils.money(productoService.totalDevuelto(producto))),
+                List.of("Neto (EUR)", ExportUtils.money(productoService.totalNeto(producto))),
+                List.of("Pendiente (EUR)", ExportUtils.money(productoService.totalPendiente(producto)))
         );
+
         writeResponse(response, formato, "producto_" + producto.getId() + "_totales",
                 "Resumen de " + producto.getNombre(), headers, rows);
     }

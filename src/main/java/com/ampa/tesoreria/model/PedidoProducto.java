@@ -56,4 +56,14 @@ public class PedidoProducto {
 
     @Column(length = 1000)
     private String observaciones;
+
+    @OneToOne(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private DevolucionPedidoProducto devolucion;
+
+    public void setDevolucion(DevolucionPedidoProducto devolucion) {
+        this.devolucion = devolucion;
+        if (devolucion != null) {
+            devolucion.setPedido(this);
+        }
+    }
 }

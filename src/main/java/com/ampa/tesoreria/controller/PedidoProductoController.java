@@ -13,6 +13,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Controller
@@ -141,5 +142,39 @@ public class PedidoProductoController {
             redirectAttributes.addFlashAttribute("error", "No se pudo borrar: " + e.getMessage());
         }
         return "redirect:/extras/" + productoId;
+    }
+
+    // ------------------------------------------------------------
+// DEVOLUCION
+// ------------------------------------------------------------
+    @PostMapping("/{id}/devolucion")
+    public String registrarDevolucion(@PathVariable Long productoId,
+                                      @PathVariable Long id,
+                                      @RequestParam(required = false)
+                                      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
+                                      @RequestParam BigDecimal importe,
+                                      @RequestParam MetodoPago metodo,
+                                      @RequestParam(required = false) String observaciones,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            pedidoService.registrarDevolucion(id, fecha, importe, metodo, observaciones);
+            redirectAttributes.addFlashAttribute("success", "Devolucion registrada");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/extras/productos/" + productoId;
+    }
+
+    @PostMapping("/{id}/devolucion/eliminar")
+    public String eliminarDevolucion(@PathVariable Long productoId,
+                                     @PathVariable Long id,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            pedidoService.eliminarDevolucion(id);
+            redirectAttributes.addFlashAttribute("success", "Devolucion eliminada");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/extras/productos/" + productoId;
     }
 }

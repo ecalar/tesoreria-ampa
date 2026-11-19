@@ -42,39 +42,45 @@
     </div>
 
     <div class="row mb-3">
-        <div class="col-md-3">
-            <div class="card bg-light">
-                <div class="card-body py-2">
-                    <small class="text-muted">Productos</small>
-                    <h5 class="mb-0" th:text="${totalProductos}"></h5>
-                </div>
-            </div>
+        <div class="col-md-2">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Productos</small>
+                <h6 class="mb-0" th:text="${totalProductos}"></h6>
+            </div></div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-light">
-                <div class="card-body py-2">
-                    <small class="text-muted">Unidades</small>
-                    <h5 class="mb-0" th:text="${totalUnidades}"></h5>
-                </div>
-            </div>
+        <div class="col-md-2">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Unidades</small>
+                <h6 class="mb-0" th:text="${totalUnidades}"></h6>
+            </div></div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-light">
-                <div class="card-body py-2">
-                    <small class="text-muted">Cobrado</small>
-                    <h5 class="mb-0 text-success"
-                        th:text="${#numbers.formatDecimal(totalCobrado, 1, 2)} + ' EUR'"></h5>
-                </div>
-            </div>
+        <div class="col-md-2">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Cobrado</small>
+                <h6 class="mb-0 text-success"
+                    th:text="${#numbers.formatDecimal(totalCobrado, 1, 2)} + ' EUR'"></h6>
+            </div></div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-light">
-                <div class="card-body py-2">
-                    <small class="text-muted">Pendiente</small>
-                    <h5 class="mb-0 text-danger"
-                        th:text="${#numbers.formatDecimal(totalPendiente, 1, 2)} + ' EUR'"></h5>
-                </div>
-            </div>
+        <div class="col-md-2">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Devuelto</small>
+                <h6 class="mb-0 text-danger"
+                    th:text="${#numbers.formatDecimal(totalDevuelto, 1, 2)} + ' EUR'"></h6>
+            </div></div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Neto</small>
+                <h6 class="mb-0"
+                    th:text="${#numbers.formatDecimal(totalNeto, 1, 2)} + ' EUR'"></h6>
+            </div></div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Pendiente</small>
+                <h6 class="mb-0 text-warning"
+                    th:text="${#numbers.formatDecimal(totalPendiente, 1, 2)} + ' EUR'"></h6>
+            </div></div>
         </div>
     </div>
 

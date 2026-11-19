@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Campaña de fotos')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 th:text="${editando} ? 'Editar campaña' : 'Nueva campaña de fotos'"></h2>
+        <a th:href="@{/fotos}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <form th:action="${editando} ? @{'/fotos/' + ${form.id} + '/editar'} : @{/fotos/nueva}"
+          th:object="${form}" method="post" class="mt-4" style="max-width: 900px;">
+
+        <div class="card mb-3">
+            <div class="card-header">Datos generales</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Nombre *</label>
+                    <input type="text" th:field="*{nombre}" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Descripción</label>
+                    <textarea th:field="*{descripcion}" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Fecha inicio *</label>
+                        <input type="date" th:field="*{fechaInicio}" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Fecha fin *</label>
+                        <input type="date" th:field="*{fechaFin}" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">Precios (por campaña)</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Precio lote *</label>
+                        <input type="number" step="0.01" min="0" th:field="*{precioLote}"
+                               class="form-control" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Precio grupal *</label>
+                        <input type="number" step="0.01" min="0" th:field="*{precioGrupal}"
+                               class="form-control" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Precio individual *</label>
+                        <input type="number" step="0.01" min="0" th:field="*{precioIndividual}"
+                               class="form-control" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Descuento socio (%)</label>
+                        <input type="number" step="0.01" min="0" max="100"
+                               th:field="*{descuentoSocioPorcentaje}" class="form-control">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save"></i>
+            <span th:text="${editando} ? 'Guardar cambios' : 'Crear campaña'"></span>
+        </button>
+        <a th:href="@{/fotos}" class="btn btn-outline-secondary">Cancelar</a>
+    </form>
+</div>
+</body>
+</html>

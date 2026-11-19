@@ -153,9 +153,14 @@ public class CampaniaFotosService {
     }
 
     public BigDecimal totalDevuelto(CampaniaFotos c) {
-        // Se calculará cuando añadamos DevolucionPedidoFoto en la 8.2
-        // De momento 0
-        return BigDecimal.ZERO;
+        return c.getPedidos().stream()
+                .filter(p -> p.getDevolucion() != null)
+                .map(p -> p.getDevolucion().getImporte())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal totalNeto(CampaniaFotos c) {
+        return totalCobrado(c).subtract(totalDevuelto(c));
     }
 
     // ------------------------------------------------------------

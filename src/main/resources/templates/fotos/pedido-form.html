@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Pedido de fotos')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+  <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+    <span th:text="${success}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+    <span th:text="${error}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 th:text="${editando} ? 'Editar pedido' : 'Nuevo pedido de fotos'"></h2>
+    <a th:href="@{'/fotos/' + ${campania.id}}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Volver a la campaña
+    </a>
+  </div>
+
+  <p class="text-muted">
+    Campaña: <strong th:text="${campania.nombre}"></strong>
+    — Lote <span th:text="${#numbers.formatDecimal(campania.precioLote, 1, 2)}"></span> €,
+    Grupal <span th:text="${#numbers.formatDecimal(campania.precioGrupal, 1, 2)}"></span> €,
+    Individual <span th:text="${#numbers.formatDecimal(campania.precioIndividual, 1, 2)}"></span> €
+  </p>
+
+  <form th:action="${editando} ? @{'/fotos/' + ${campania.id} + '/pedidos/' + ${form.id} + '/editar'}
+                                  : @{'/fotos/' + ${campania.id} + '/pedidos/nuevo'}"
+        th:object="${form}" method="post" class="mt-4" style="max-width: 1000px;">
+
+    <!-- Alumno -->
+    <div class="card mb-3">
+      <div class="card-header">Alumno</div>
+      <div class="card-body">
+        <select th:field="*{alumnoId}" class="form-select" required th:disabled="${editando}">
+          <option value="">-- Selecciona un alumno --</option>
+          <option th:each="a : ${alumnos}"
+                  th:value="${a.id}"
+                  th:text="${a.nombreCompleto + ' (' + (a.curso != null ? a.curso : 'sin curso') + (a.socio != null ? '' : ' - NO SOCIO') + ')'}"
+                  th:selected="${form.alumnoId != null and form.alumnoId == a.id}"></option>
+        </select>
+        <input th:if="${editando}" type="hidden" th:field="*{alumnoId}">
+        <div th:unless="${editando}" class="mt-2">
+          <a th:href="@{/alumnos/nuevo-no-socio(returnTo=${returnTo})}"
+             class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-person-plus"></i> Añadir alumno no socio
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lotes e individuales -->
+    <div class="card mb-3">
+      <div class="card-header">Cantidades</div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Nº de lotes</label>
+            <input type="number" min="0" th:field="*{numLotes}" class="form-control">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Nº de fotos individuales</label>
+            <input type="number" min="0" th:field="*{numIndividuales}" class="form-control">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grupales -->
+    <div class="card mb-3">
+      <div class="card-header">
+        Fotos grupales
+        <span class="text-muted small">(curso + cantidad, ej. 1ºB x 1)</span>
+      </div>
+      <div class="card-body">
+        <div th:each="g, iter : *{grupos}" class="row mb-2 align-items-end">
+          <div class="col-md-6">
+            <label class="form-label small">Curso</label>
+            <input type="text" th:field="*{grupos[__${iter.index}__].curso}"
+                   class="form-control form-control-sm" placeholder="Ej: 1ºB">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">Cantidad</label>
+            <input type="number" min="0" th:field="*{grupos[__${iter.index}__].cantidad}"
+                   class="form-control form-control-sm">
+          </div>
+        </div>
+        <div class="text-muted small mt-2">
+          Añade una línea por cada curso. Puedes dejar las líneas vacías.
+        </div>
+      </div>
+    </div>
+
+    <!-- Hermanos -->
+    <div class="card mb-3">
+      <div class="card-header">
+        Hermanos (informativo para el fotógrafo)
+      </div>
+      <div class="card-body">
+        <div th:each="h, iter : *{hermanos}" class="row mb-2 align-items-end">
+          <div class="col-md-6">
+            <label class="form-label small">Nombre</label>
+            <input type="text" th:field="*{hermanos[__${iter.index}__].nombre}"
+                   class="form-control form-control-sm">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Curso</label>
+            <input type="text" th:field="*{hermanos[__${iter.index}__].curso}"
+                   class="form-control form-control-sm">
+          </div>
+        </div>
+        <div class="text-muted small mt-2">
+          Solo se guardan los que tengan nombre. Si no tiene hermanos, déjalo en blanco.
+        </div>
+      </div>
+    </div>
+
+    <!-- Pago -->
+    <div class="card mb-3">
+      <div class="card-header">Pago</div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Método de pago *</label>
+            <select th:field="*{metodoPago}" class="form-select" required>
+              <option th:each="m : ${metodosPago}" th:value="${m}" th:text="${m.name()}"></option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Observaciones</label>
+          <textarea th:field="*{observaciones}" class="form-control" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-save"></i>
+      <span th:text="${editando} ? 'Guardar cambios' : 'Crear pedido'"></span>
+    </button>
+    <a th:href="@{'/fotos/' + ${campania.id}}" class="btn btn-outline-secondary">Cancelar</a>
+  </form>
+</div>
+</body>
+</html>

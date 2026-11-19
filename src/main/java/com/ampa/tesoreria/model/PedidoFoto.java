@@ -86,6 +86,9 @@ public class PedidoFoto {
     @Column(length = 1000)
     private String observaciones;
 
+    @OneToOne(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private DevolucionPedidoFoto devolucion;
+
     // Relaciones
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -126,5 +129,12 @@ public class PedidoFoto {
     @Transient
     public boolean getTieneHermanos() {
         return hermanos != null && !hermanos.isEmpty();
+    }
+
+    public void setDevolucion(DevolucionPedidoFoto devolucion) {
+        this.devolucion = devolucion;
+        if (devolucion != null) {
+            devolucion.setPedido(this);
+        }
     }
 }

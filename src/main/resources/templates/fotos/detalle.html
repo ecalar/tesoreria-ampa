@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Campaña de fotos')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+  <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+    <span th:text="${success}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+    <span th:text="${error}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <a th:href="@{/fotos}" class="btn btn-outline-secondary btn-sm mb-2">
+        <i class="bi bi-arrow-left"></i> Volver a Campañas
+      </a>
+      <h2 class="mb-0" th:text="${campania.nombre}"></h2>
+    </div>
+    <div>
+      <a th:href="@{'/fotos/' + ${campania.id} + '/editar'}"
+         class="btn btn-outline-secondary">
+        <i class="bi bi-pencil"></i> Editar
+      </a>
+      <form th:if="${!campania.cerrada}"
+            th:action="@{'/fotos/' + ${campania.id} + '/cerrar'}"
+            method="post" class="d-inline"
+            onsubmit="return confirm('Cerrar la campaña? No se podrán añadir más pedidos.');">
+        <button type="submit" class="btn btn-outline-warning">
+          <i class="bi bi-lock"></i> Cerrar
+        </button>
+      </form>
+      <form th:if="${campania.cerrada}"
+            th:action="@{'/fotos/' + ${campania.id} + '/reabrir'}"
+            method="post" class="d-inline">
+        <button type="submit" class="btn btn-outline-success">
+          <i class="bi bi-unlock"></i> Reabrir
+        </button>
+      </form>
+      <form th:if="${campania.pedidos.size() == 0}"
+            th:action="@{'/fotos/' + ${campania.id} + '/borrar'}"
+            method="post" class="d-inline"
+            onsubmit="return confirm('Borrar la campaña?');">
+        <button type="submit" class="btn btn-outline-danger">
+          <i class="bi bi-trash"></i> Borrar
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">Datos de la campaña</div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <dl class="row mb-0">
+            <dt class="col-sm-5">Periodo</dt>
+            <dd class="col-sm-7">
+              <span th:text="${#temporals.format(campania.fechaInicio, 'dd/MM/yyyy')}"></span>
+              -
+              <span th:text="${#temporals.format(campania.fechaFin, 'dd/MM/yyyy')}"></span>
+            </dd>
+            <dt class="col-sm-5">Estado</dt>
+            <dd class="col-sm-7">
+              <span th:if="${campania.cerrada}" class="badge bg-secondary">CERRADA</span>
+              <span th:unless="${campania.cerrada}" class="badge bg-success">ABIERTA</span>
+            </dd>
+          </dl>
+        </div>
+        <div class="col-md-6">
+          <dl class="row mb-0">
+            <dt class="col-sm-5">Precio lote</dt>
+            <dd class="col-sm-7"
+                th:text="${#numbers.formatDecimal(campania.precioLote, 1, 2)} + ' EUR'"></dd>
+            <dt class="col-sm-5">Precio grupal</dt>
+            <dd class="col-sm-7"
+                th:text="${#numbers.formatDecimal(campania.precioGrupal, 1, 2)} + ' EUR'"></dd>
+            <dt class="col-sm-5">Precio individual</dt>
+            <dd class="col-sm-7"
+                th:text="${#numbers.formatDecimal(campania.precioIndividual, 1, 2)} + ' EUR'"></dd>
+            <dt class="col-sm-5">Descuento socio</dt>
+            <dd class="col-sm-7" th:text="${campania.descuentoSocioPorcentaje} + ' %'"></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-2">
+      <div class="card bg-light"><div class="card-body py-2">
+        <small class="text-muted">Pedidos</small>
+        <h6 class="mb-0" th:text="${pedidos.size()}"></h6>
+      </div></div>
+    </div>
+    <div class="col-md-2">
+      <div class="card bg-light"><div class="card-body py-2">
+        <small class="text-muted">Recaudado</small>
+        <h6 class="mb-0"
+            th:text="${#numbers.formatDecimal(totalRecaudado, 1, 2)} + ' EUR'"></h6>
+      </div></div>
+    </div>
+    <div class="col-md-2">
+      <div class="card bg-light"><div class="card-body py-2">
+        <small class="text-muted">Cobrado</small>
+        <h6 class="mb-0 text-success"
+            th:text="${#numbers.formatDecimal(totalCobrado, 1, 2)} + ' EUR'"></h6>
+      </div></div>
+    </div>
+    <div class="col-md-2">
+      <div class="card bg-light"><div class="card-body py-2">
+        <small class="text-muted">Devuelto</small>
+        <h6 class="mb-0 text-danger"
+            th:text="${#numbers.formatDecimal(totalDevuelto, 1, 2)} + ' EUR'"></h6>
+      </div></div>
+    </div>
+    <div class="col-md-2">
+      <div class="card bg-light"><div class="card-body py-2">
+        <small class="text-muted">Neto</small>
+        <h6 class="mb-0"
+            th:text="${#numbers.formatDecimal(totalNeto, 1, 2)} + ' EUR'"></h6>
+      </div></div>
+    </div>
+    <div class="col-md-2">
+      <div class="card bg-light"><div class="card-body py-2">
+        <small class="text-muted">Pendiente</small>
+        <h6 class="mb-0 text-warning"
+            th:text="${#numbers.formatDecimal(totalPendiente, 1, 2)} + ' EUR'"></h6>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Pedidos</h4>
+    <a th:href="@{'/fotos/' + ${campania.id} + '/pedidos/nuevo'}"
+       class="btn btn-sm btn-primary" th:if="${!campania.cerrada}">
+      <i class="bi bi-plus-lg"></i> Nuevo pedido
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+        <tr>
+          <th>Alumno</th>
+          <th>Curso</th>
+          <th class="text-center">Lotes</th>
+          <th class="text-center">Grupales</th>
+          <th class="text-center">Individuales</th>
+          <th class="text-end">Total</th>
+          <th>Pagado</th>
+          <th>Devolución</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${pedidos}">
+          <td th:text="${p.alumno.nombreCompleto}"></td>
+          <td th:text="${p.cursoAlumno}"></td>
+          <td class="text-center" th:text="${p.numLotes}"></td>
+          <td class="text-center">
+                        <span th:if="${p.grupos != null and !p.grupos.isEmpty()}"
+                              th:text="${p.grupos.size()} + ' grupos'"></span>
+            <span th:if="${p.grupos == null or p.grupos.isEmpty()}" class="text-muted">—</span>
+          </td>
+          <td class="text-center" th:text="${p.numIndividuales}"></td>
+          <td class="text-end"
+              th:text="${#numbers.formatDecimal(p.total, 1, 2)} + ' EUR'"></td>
+          <td>
+            <span th:if="${p.pagado}" class="badge bg-success">PAGADO</span>
+            <span th:unless="${p.pagado}" class="badge bg-warning text-dark">PENDIENTE</span>
+          </td>
+          <td>
+                        <span th:if="${p.devolucion != null}" class="badge bg-danger">
+                            <span th:text="${#numbers.formatDecimal(p.devolucion.importe, 1, 2)}"></span> EUR
+                        </span>
+            <span th:if="${p.devolucion == null}" class="text-muted">—</span>
+          </td>
+          <td class="text-end">
+            <!-- Marcar pagado / desmarcar -->
+            <form th:unless="${p.pagado}"
+                  th:action="@{'/fotos/' + ${campania.id} + '/pedidos/' + ${p.id} + '/pagar'}"
+                  method="post" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-success" title="Marcar pagado">
+                <i class="bi bi-check"></i>
+              </button>
+            </form>
+            <form th:if="${p.pagado and p.devolucion == null}"
+                  th:action="@{'/fotos/' + ${campania.id} + '/pedidos/' + ${p.id} + '/desmarcar'}"
+                  method="post" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-outline-warning" title="Desmarcar">
+                <i class="bi bi-x"></i>
+              </button>
+            </form>
+
+            <!-- Editar / borrar -->
+            <a th:if="${!p.pagado and !campania.cerrada}"
+               th:href="@{'/fotos/' + ${campania.id} + '/pedidos/' + ${p.id} + '/editar'}"
+               class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <form th:if="${!p.pagado}"
+                  th:action="@{'/fotos/' + ${campania.id} + '/pedidos/' + ${p.id} + '/borrar'}"
+                  method="post" class="d-inline"
+                  onsubmit="return confirm('Borrar este pedido?');">
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+
+            <!-- Devolución -->
+            <button th:if="${p.pagado and p.devolucion == null}"
+                    type="button" class="btn btn-sm btn-outline-danger"
+                    data-bs-toggle="collapse"
+                    th:attr="data-bs-target='#dev-' + ${p.id}"
+                    title="Registrar devolución">
+              <i class="bi bi-arrow-return-left"></i>
+            </button>
+            <form th:if="${p.devolucion != null}"
+                  th:action="@{'/fotos/' + ${campania.id} + '/pedidos/' + ${p.id} + '/devolucion/eliminar'}"
+                  method="post" class="d-inline"
+                  onsubmit="return confirm('Eliminar la devolución?');">
+              <button type="submit" class="btn btn-sm btn-outline-warning">
+                <i class="bi bi-arrow-counterclockwise"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+
+        <!-- Fila de devolución (collapse) -->
+        <tr th:each="p : ${pedidos}" th:if="${p.pagado and p.devolucion == null}"
+            class="collapse" th:id="'dev-' + ${p.id}">
+          <td colspan="9" class="bg-light">
+            <form th:action="@{'/fotos/' + ${campania.id} + '/pedidos/' + ${p.id} + '/devolucion'}"
+                  method="post" class="row g-2 align-items-end">
+              <div class="col-md-2">
+                <label class="form-label small">Fecha</label>
+                <input type="date" name="fecha" class="form-control form-control-sm">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small">Importe *</label>
+                <input type="number" step="0.01" name="importe"
+                       th:value="${p.total}"
+                       class="form-control form-control-sm" required>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Método *</label>
+                <select name="metodo" class="form-select form-select-sm" required>
+                  <option th:each="m : ${T(com.ampa.tesoreria.model.enums.MetodoPago).values()}"
+                          th:value="${m}" th:text="${m.name()}"></option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small">Observaciones</label>
+                <input type="text" name="observaciones"
+                       class="form-control form-control-sm">
+              </div>
+              <div class="col-md-2">
+                <button type="submit" class="btn btn-sm btn-danger w-100"
+                        onclick="return confirm('Registrar la devolución?');">
+                  <i class="bi bi-check"></i> Registrar
+                </button>
+              </div>
+            </form>
+          </td>
+        </tr>
+
+        <tr th:if="${#lists.isEmpty(pedidos)}">
+          <td colspan="9" class="text-center text-muted py-4">
+            No hay pedidos en esta campaña.
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Fotos')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Campañas de fotos</h2>
+        <a th:href="@{/fotos/nueva}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Nueva campaña
+        </a>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/fotos}" method="get" class="row g-2 align-items-end">
+                <div class="col-md-9">
+                    <label class="form-label">Buscar por nombre</label>
+                    <input type="text" name="q" th:value="${q}" class="form-control"
+                           placeholder="Ej: Fotos de Navidad">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-2">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Campañas</small>
+                <h6 class="mb-0" th:text="${totalCampanias}"></h6>
+            </div></div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Pedidos</small>
+                <h6 class="mb-0" th:text="${totalPedidos}"></h6>
+            </div></div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Cobrado</small>
+                <h6 class="mb-0 text-success"
+                    th:text="${#numbers.formatDecimal(totalCobrado, 1, 2)} + ' EUR'"></h6>
+            </div></div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Devuelto</small>
+                <h6 class="mb-0 text-danger"
+                    th:text="${#numbers.formatDecimal(totalDevuelto, 1, 2)} + ' EUR'"></h6>
+            </div></div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Neto</small>
+                <h6 class="mb-0"
+                    th:text="${#numbers.formatDecimal(totalNeto, 1, 2)} + ' EUR'"></h6>
+            </div></div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Pendiente</small>
+                <h6 class="mb-0 text-warning"
+                    th:text="${#numbers.formatDecimal(totalPendiente, 1, 2)} + ' EUR'"></h6>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Fechas</th>
+                    <th class="text-center">Pedidos</th>
+                    <th class="text-end">Precio lote</th>
+                    <th class="text-end">Precio grupal</th>
+                    <th class="text-end">Precio ind.</th>
+                    <th class="text-end">Cobrado</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${campanias}">
+                    <td>
+                        <a th:href="@{'/fotos/' + ${c.id}}" th:text="${c.nombre}"></a>
+                    </td>
+                    <td>
+                        <span th:text="${#temporals.format(c.fechaInicio, 'dd/MM/yy')}"></span>
+                        -
+                        <span th:text="${#temporals.format(c.fechaFin, 'dd/MM/yy')}"></span>
+                    </td>
+                    <td class="text-center" th:text="${c.pedidos.size()}"></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(c.precioLote, 1, 2)} + ' EUR'"></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(c.precioGrupal, 1, 2)} + ' EUR'"></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(c.precioIndividual, 1, 2)} + ' EUR'"></td>
+                    <td class="text-end text-success">—</td>
+                        <span th:if="${c.cerrada}" class="badge bg-secondary">CERRADA</span>
+                        <span th:unless="${c.cerrada}" class="badge bg-success">ABIERTA</span>
+                    </td>
+                    <td class="text-end">
+                        <a th:href="@{'/fotos/' + ${c.id}}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a th:href="@{'/fotos/' + ${c.id} + '/editar'}"
+                           class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(campanias)}">
+                    <td colspan="9" class="text-center text-muted py-4">
+                        No hay campañas creadas.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

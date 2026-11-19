@@ -97,9 +97,6 @@
                     <th class="text-end">Precio</th>
                     <th class="text-center">Activo</th>
                     <th class="text-center">Pedidos</th>
-                    <th class="text-center">Unidades</th>
-                    <th class="text-end">Cobrado</th>
-                    <th class="text-end">Pendiente</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -109,26 +106,25 @@
                         <a th:href="@{'/extras/' + ${p.id}}" th:text="${p.nombre}"></a>
                     </td>
                     <td th:text="${p.descripcion}"></td>
-                    <td class="text-end" th:text="${#numbers.formatDecimal(p.precioUnitario, 1, 2)} + ' EUR'"></td>
+                    <td class="text-end"
+                        th:text="${#numbers.formatDecimal(p.precioUnitario, 1, 2)} + ' EUR'"></td>
                     <td class="text-center">
                         <span th:if="${p.activo}" class="badge bg-success">SI</span>
                         <span th:unless="${p.activo}" class="badge bg-secondary">NO</span>
                     </td>
                     <td class="text-center" th:text="${p.pedidos.size()}"></td>
-                    <td class="text-center" th:text="${p.pedidos.?[true].size() > 0 ? p.pedidos.![cantidad].stream().reduce(0, (a,b) -> a + b) : 0}"></td>
-                    <td class="text-end text-success" th:text="${#numbers.formatDecimal(p.pedidos.?[pagado == true].![subtotal].stream().reduce(0, (a,b) -> a + b), 1, 2)} + ' EUR'"></td>
-                    <td class="text-end text-danger" th:text="${#numbers.formatDecimal(p.pedidos.?[pagado == false].![subtotal].stream().reduce(0, (a,b) -> a + b), 1, 2)} + ' EUR'"></td>
                     <td class="text-end">
                         <a th:href="@{'/extras/' + ${p.id}}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-eye"></i>
                         </a>
-                        <a th:href="@{'/extras/' + ${p.id} + '/editar'}" class="btn btn-sm btn-outline-secondary">
+                        <a th:href="@{'/extras/' + ${p.id} + '/editar'}"
+                           class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-pencil"></i>
                         </a>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(productos)}">
-                    <td colspan="9" class="text-center text-muted py-4">
+                    <td colspan="6" class="text-center text-muted py-4">
                         No hay productos.
                     </td>
                 </tr>

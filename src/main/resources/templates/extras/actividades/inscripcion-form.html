@@ -49,23 +49,7 @@
                     <select th:field="*{modalidad}" id="modalidadSelect" class="form-select" required>
                         <option th:each="m : ${modalidades}" th:value="${m}" th:text="${m.name()}"></option>
                     </select>
-                    <small class="text-muted">
-                        COMPLETO = periodo completo · MEDIO = mitad
-                    </small>
-                </div>
-
-                <!-- Bloque POR_DIAS (solo visible si se elige POR_DIAS) -->
-                <div id="bloquePorDias" style="display:none;">
-                    <div class="mb-3">
-                        <label class="form-label">Numero de dias *</label>
-                        <input type="number" min="1" max="31" th:field="*{diasAsistidos}"
-                               class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Dias concretos (opcional)</label>
-                        <input type="text" th:field="*{diasSemanaSeleccionados}" class="form-control"
-                               placeholder="Ej: L,M,X o 1,3,5">
-                    </div>
+                    <small class="text-muted" th:text="${textoModalidad}">COMPLETO = periodo completo</small>
                 </div>
 
                 <div class="form-check mb-3">

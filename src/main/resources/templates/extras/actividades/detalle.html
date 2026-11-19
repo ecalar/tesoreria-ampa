@@ -59,14 +59,6 @@
                         <dt class="col-sm-5">Precio completo</dt>
                         <dd class="col-sm-7"
                             th:text="${#numbers.formatDecimal(actividad.precioMesCompleto, 1, 2)} + ' EUR'"></dd>
-                        <dt class="col-sm-5">Precio medio</dt>
-                        <dd class="col-sm-7"
-                            th:text="${#numbers.formatDecimal(actividad.precioMedioMes, 1, 2)} + ' EUR'"></dd>
-                        <div th:if="${actividad.precioPorDia != null}">
-                            <dt class="col-sm-5">Precio por dia</dt>
-                            <dd class="col-sm-7"
-                                th:text="${#numbers.formatDecimal(actividad.precioPorDia, 1, 2)} + ' EUR'"></dd>
-                        </div>
                         <dt class="col-sm-5">Descuento socio</dt>
                         <dd class="col-sm-7" th:text="${actividad.descuentoSocioPorcentaje} + ' %'"></dd>
                     </dl>

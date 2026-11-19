@@ -65,7 +65,7 @@ public class ActividadService {
                 .diasSemana(tipo == TipoActividad.EXTRA_ACTIVIDAD ? null : joinDias(form.getDiasSeleccionados()))
                 .horario(form.getHorario())
                 .precioMesCompleto(form.getPrecioMesCompleto())
-                .precioMedioMes(form.getPrecioMedioMes())
+                .precioMedioMes(tipo == TipoActividad.EXTRA_ACTIVIDAD ? null : form.getPrecioMedioMes())
                 .precioPorDia(tipo != TipoActividad.EXTRAESCOLAR ? form.getPrecioPorDia() : null)
                 .descuentoSocioPorcentaje(form.getDescuentoSocioPorcentaje() != null
                         ? form.getDescuentoSocioPorcentaje() : BigDecimal.ZERO)
@@ -90,7 +90,9 @@ public class ActividadService {
                 : joinDias(form.getDiasSeleccionados()));
         a.setHorario(form.getHorario());
         a.setPrecioMesCompleto(form.getPrecioMesCompleto());
-        a.setPrecioMedioMes(form.getPrecioMedioMes());
+        a.setPrecioMedioMes(a.getTipo() == TipoActividad.EXTRA_ACTIVIDAD
+                ? null
+                : form.getPrecioMedioMes());
         a.setPrecioPorDia(a.getTipo() != TipoActividad.EXTRAESCOLAR ? form.getPrecioPorDia() : null);
         a.setDescuentoSocioPorcentaje(form.getDescuentoSocioPorcentaje() != null
                 ? form.getDescuentoSocioPorcentaje() : BigDecimal.ZERO);
@@ -151,8 +153,19 @@ public class ActividadService {
     /** Calcula el importe base segun modalidad y dias (sin aplicar descuento) */
     public BigDecimal calcularImporteBase(Actividad actividad, Modalidad modalidad, Integer diasAsistidos) {
         return switch (modalidad) {
-            case COMPLETO -> actividad.getPrecioMesCompleto();
-            case MEDIO -> actividad.getPrecioMedioMes();
+            case COMPLETO -> {
+                if (actividad.getPrecioMesCompleto() == null) {
+                    throw new IllegalArgumentException("La actividad no tiene precio completo configurado");
+                }
+                yield actividad.getPrecioMesCompleto();
+            }
+            case MEDIO -> {
+                if (actividad.getPrecioMedioMes() == null) {
+                    throw new IllegalArgumentException(
+                            "Esta actividad no admite la modalidad MEDIO. Elige COMPLETO o POR_DIAS.");
+                }
+                yield actividad.getPrecioMedioMes();
+            }
             case POR_DIAS -> {
                 if (actividad.getPrecioPorDia() == null) {
                     throw new IllegalArgumentException("La actividad no tiene configurado el precio por dia");

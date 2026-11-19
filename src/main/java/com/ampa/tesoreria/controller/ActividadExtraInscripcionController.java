@@ -48,7 +48,7 @@ public class ActividadExtraInscripcionController {
         model.addAttribute("form", form);
         model.addAttribute("actividad", actividad);
         model.addAttribute("alumnos", alumnoService.listarTodos());
-        model.addAttribute("modalidades", modalidades);
+        model.addAttribute("modalidades", modalidadesDisponibles(actividad));
         model.addAttribute("editando", false);
         model.addAttribute("returnTo",
                 "/extras/actividades/" + actividadId + "/inscripciones/nueva");
@@ -110,10 +110,16 @@ public class ActividadExtraInscripcionController {
         model.addAttribute("form", form);
         model.addAttribute("actividad", actividad);
         model.addAttribute("alumnos", List.of(i.getAlumno()));
-        model.addAttribute("modalidades", modalidades);
+        model.addAttribute("modalidades", modalidadesDisponibles(actividad));
         model.addAttribute("editando", true);
         model.addAttribute("returnTo",
                 "/extras/actividades/" + actividadId + "/inscripciones/" + id + "/editar");
+        String textoModalidad = switch (modalidades.size()) {
+            case 1 -> "Esta actividad solo admite pago completo.";
+            case 2 -> "COMPLETO = periodo completo · POR_DIAS = solo los dias elegidos";
+            default -> "COMPLETO = periodo completo · MEDIO = mitad · POR_DIAS = solo los dias elegidos";
+        };
+        model.addAttribute("textoModalidad", textoModalidad);
         return "extras/actividades/inscripcion-form";
     }
 
@@ -185,5 +191,17 @@ public class ActividadExtraInscripcionController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/extras/actividades/" + actividadId + "/inscripciones/" + id;
+    }
+
+    private List<Modalidad> modalidadesDisponibles(com.ampa.tesoreria.model.Actividad actividad) {
+        List<Modalidad> modalidades = new java.util.ArrayList<>();
+        modalidades.add(Modalidad.COMPLETO); // siempre disponible
+        if (actividad.getPrecioMedioMes() != null) {
+            modalidades.add(Modalidad.MEDIO);
+        }
+        if (actividad.getPrecioPorDia() != null) {
+            modalidades.add(Modalidad.POR_DIAS);
+        }
+        return modalidades;
     }
 }

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Inscripcion escuela')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 th:text="${inscripcion.alumno.nombreCompleto}"></h2>
+        <div>
+            <a th:href="@{'/escuelas/' + ${actividad.id} + '/inscripciones/' + ${inscripcion.id} + '/editar'}"
+               class="btn btn-outline-secondary">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            <form th:if="${inscripcion.estado.name() == 'ACTIVA'}"
+                  th:action="@{'/escuelas/' + ${actividad.id} + '/inscripciones/' + ${inscripcion.id} + '/baja'}"
+                  method="post" class="d-inline"
+                  onsubmit="return confirm('Dar de baja a este alumno?');">
+                <button type="submit" class="btn btn-outline-warning">
+                    <i class="bi bi-x-circle"></i> Dar de baja
+                </button>
+            </form>
+            <form th:if="${inscripcion.estado.name() == 'BAJA'}"
+                  th:action="@{'/escuelas/' + ${actividad.id} + '/inscripciones/' + ${inscripcion.id} + '/reactivar'}"
+                  method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-success">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reactivar
+                </button>
+            </form>
+            <a th:href="@{'/escuelas/' + ${actividad.id}}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Datos de la inscripcion</div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Escuela</dt>
+                        <dd class="col-sm-7" th:text="${actividad.nombre}"></dd>
+                        <dt class="col-sm-5">Modalidad</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge bg-info" th:text="${inscripcion.modalidad.name()}"></span>
+                        </dd>
+                        <div th:if="${inscripcion.diasAsistidos != null}">
+                            <dt class="col-sm-5">Dias</dt>
+                            <dd class="col-sm-7" th:text="${inscripcion.diasAsistidos}"></dd>
+                        </div>
+                        <div th:if="${inscripcion.diasSemanaSeleccionados != null}">
+                            <dt class="col-sm-5">Dias concretos</dt>
+                            <dd class="col-sm-7" th:text="${inscripcion.diasSemanaSeleccionados}"></dd>
+                        </div>
+                        <dt class="col-sm-5">Importe</dt>
+                        <dd class="col-sm-7"
+                            th:text="${#numbers.formatDecimal(inscripcion.importeMensualCalculado, 1, 2)} + ' EUR'"></dd>
+                        <dt class="col-sm-5">Estado</dt>
+                        <dd class="col-sm-7">
+                            <span th:if="${inscripcion.estado.name() == 'ACTIVA'}" class="badge bg-success">ACTIVA</span>
+                            <span th:if="${inscripcion.estado.name() == 'BAJA'}" class="badge bg-secondary">BAJA</span>
+                        </dd>
+                        <dt class="col-sm-5">Fecha inscripcion</dt>
+                        <dd class="col-sm-7"
+                            th:text="${#temporals.format(inscripcion.fechaInscripcion, 'dd/MM/yyyy')}"></dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Resumen de pagos</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted d-block">Cobrado</small>
+                            <h5 class="text-success"
+                                th:text="${#numbers.formatDecimal(totalPagado, 1, 2)} + ' EUR'"></h5>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Pendiente</small>
+                            <h5 class="text-danger"
+                                th:text="${#numbers.formatDecimal(totalPendiente, 1, 2)} + ' EUR'"></h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h4>Registro mensual</h4>
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Mes</th>
+                    <th class="text-end">Importe</th>
+                    <th>Estado</th>
+                    <th>Fecha pago</th>
+                    <th>Metodo</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${pagos}">
+                    <td th:text="${p.mes}"></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(p.importe, 1, 2)} + ' EUR'"></td>
+                    <td>
+                        <span th:if="${p.pagado}" class="badge bg-success">PAGADO</span>
+                        <span th:if="${!p.pagado}" class="badge bg-warning text-dark">PENDIENTE</span>
+                    </td>
+                    <td th:text="${p.fechaPago != null ? #temporals.format(p.fechaPago, 'dd/MM/yyyy') : ''}"></td>
+                    <td th:text="${p.metodoPago != null ? p.metodoPago.name() : ''}"></td>
+                    <td class="text-end">
+                        <form th:if="${!p.pagado}"
+                              th:action="@{'/escuelas/' + ${actividad.id} + '/inscripciones/' + ${inscripcion.id} + '/pagos/' + ${p.id} + '/marcar'}"
+                              method="post" class="d-inline-flex gap-1">
+                            <select name="metodo" class="form-select form-select-sm" style="width: auto;" required>
+                                <option th:each="m : ${metodosPago}" th:value="${m}" th:text="${m.name()}"></option>
+                            </select>
+                            <input type="date" name="fecha" class="form-control form-control-sm" style="width: auto;">
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="bi bi-check"></i>
+                            </button>
+                        </form>
+                        <form th:if="${p.pagado}"
+                              th:action="@{'/escuelas/' + ${actividad.id} + '/inscripciones/' + ${inscripcion.id} + '/pagos/' + ${p.id} + '/desmarcar'}"
+                              method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(pagos)}">
+                    <td colspan="6" class="text-center text-muted py-4">
+                        No hay pagos generados.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mt-4" th:if="${inscripcion.observaciones != null and !inscripcion.observaciones.isEmpty()}">
+        <div class="card-header">Observaciones</div>
+        <div class="card-body">
+            <p class="mb-0" th:text="${inscripcion.observaciones}"></p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

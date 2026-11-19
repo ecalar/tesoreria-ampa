@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Escuelas')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Escuelas</h2>
+        <a th:href="@{/escuelas/nueva}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Nueva escuela
+        </a>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/escuelas}" method="get" class="row g-2 align-items-end">
+                <div class="col-md-9">
+                    <label class="form-label">Buscar por nombre</label>
+                    <input type="text" name="q" th:value="${q}" class="form-control" placeholder="Ej: Escuela de verano">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-body py-2">
+                    <small class="text-muted">Escuelas</small>
+                    <h4 class="mb-0" th:text="${totalEscuelas}"></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-body py-2">
+                    <small class="text-muted">Inscritos activos</small>
+                    <h4 class="mb-0" th:text="${totalInscritos}"></h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-body py-2">
+                    <small class="text-muted">Total mensual</small>
+                    <h4 class="mb-0">
+                        <span th:text="${#numbers.formatDecimal(totalMensual, 1, 2)}"></span> EUR
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-download"></i> Exportar listado
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" th:href="@{/escuelas/export/listado/csv(q=${q})}">CSV</a></li>
+                <li><a class="dropdown-item" th:href="@{/escuelas/export/listado/xlsx(q=${q})}">Excel</a></li>
+                <li><a class="dropdown-item" th:href="@{/escuelas/export/listado/pdf(q=${q})}">PDF</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Fechas</th>
+                    <th>Dias</th>
+                    <th>Horario</th>
+                    <th class="text-end">Completo</th>
+                    <th class="text-end">Medio</th>
+                    <th class="text-end">Por dia</th>
+                    <th class="text-center">Inscritos</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${escuelas}">
+                    <td>
+                        <a th:href="@{'/escuelas/' + ${a.id}}" th:text="${a.nombre}"></a>
+                    </td>
+                    <td>
+                        <span th:text="${#temporals.format(a.fechaInicio, 'dd/MM/yy')}"></span>
+                        -
+                        <span th:text="${#temporals.format(a.fechaFin, 'dd/MM/yy')}"></span>
+                    </td>
+                    <td th:text="${a.diasSemana}"></td>
+                    <td th:text="${a.horario}"></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(a.precioMesCompleto, 1, 2)} + ' EUR'"></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(a.precioMedioMes, 1, 2)} + ' EUR'"></td>
+                    <td class="text-end">
+                        <span th:if="${a.precioPorDia != null}"
+                              th:text="${#numbers.formatDecimal(a.precioPorDia, 1, 2)} + ' EUR'"></span>
+                        <span th:unless="${a.precioPorDia != null}" class="text-muted">-</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary"
+                              th:text="${a.inscripciones.?[estado.name() == 'ACTIVA'].size()}"></span>
+                    </td>
+                    <td class="text-end">
+                        <a th:href="@{'/escuelas/' + ${a.id}}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a th:href="@{'/escuelas/' + ${a.id} + '/editar'}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(escuelas)}">
+                    <td colspan="9" class="text-center text-muted py-4">
+                        No hay escuelas que coincidan.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

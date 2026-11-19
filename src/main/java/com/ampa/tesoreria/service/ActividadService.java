@@ -62,7 +62,7 @@ public class ActividadService {
                 .descripcion(form.getDescripcion())
                 .fechaInicio(form.getFechaInicio())
                 .fechaFin(form.getFechaFin())
-                .diasSemana(joinDias(form.getDiasSeleccionados()))
+                .diasSemana(tipo == TipoActividad.EXTRA_ACTIVIDAD ? null : joinDias(form.getDiasSeleccionados()))
                 .horario(form.getHorario())
                 .precioMesCompleto(form.getPrecioMesCompleto())
                 .precioMedioMes(form.getPrecioMedioMes())
@@ -85,7 +85,9 @@ public class ActividadService {
         a.setDescripcion(form.getDescripcion());
         a.setFechaInicio(form.getFechaInicio());
         a.setFechaFin(form.getFechaFin());
-        a.setDiasSemana(joinDias(form.getDiasSeleccionados()));
+        a.setDiasSemana(a.getTipo() == TipoActividad.EXTRA_ACTIVIDAD
+                ? null
+                : joinDias(form.getDiasSeleccionados()));
         a.setHorario(form.getHorario());
         a.setPrecioMesCompleto(form.getPrecioMesCompleto());
         a.setPrecioMedioMes(form.getPrecioMedioMes());

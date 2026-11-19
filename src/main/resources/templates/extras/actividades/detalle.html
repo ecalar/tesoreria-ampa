@@ -5,6 +5,8 @@
 <div th:replace="~{layout :: sidebar}"></div>
 
 <div class="p-4">
+    <div class="mb-3">
+    </div>
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
         <span th:text="${success}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -13,6 +15,8 @@
         <span th:text="${error}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
+    <a th:href="@{/extras/actividades}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver </a>
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 th:text="${actividad.nombre}"></h2>
@@ -47,9 +51,6 @@
                             -
                             <span th:text="${#temporals.format(actividad.fechaFin, 'dd/MM/yyyy')}"></span>
                         </dd>
-                        <dt class="col-sm-5">Dias</dt>
-                        <dd class="col-sm-7" th:text="${actividad.diasSemana}"></dd>
-                        <dt class="col-sm-5">Horario</dt>
                         <dd class="col-sm-7" th:text="${actividad.horario}"></dd>
                     </dl>
                 </div>

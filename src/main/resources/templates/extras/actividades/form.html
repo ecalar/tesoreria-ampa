@@ -3,13 +3,19 @@
 <head th:replace="~{layout :: head('Actividad extra')}"></head>
 <body>
 <div th:replace="~{layout :: sidebar}"></div>
+
 <div class="p-4">
     <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
         <span th:text="${error}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
-    <h2 th:text="${editando} ? 'Editar actividad extra' : 'Nueva actividad extra'"></h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 th:text="${editando} ? 'Editar actividad extra' : 'Nueva actividad extra'"></h2>
+        <a th:href="@{/extras/actividades}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver a la lista
+        </a>
+    </div>
 
     <form th:action="${editando} ? @{'/extras/actividades/' + ${form.id} + '/editar'} : @{/extras/actividades/nueva}"
           th:object="${form}" method="post" class="mt-4" style="max-width: 900px;">
@@ -26,41 +32,22 @@
                     <textarea th:field="*{descripcion}" class="form-control" rows="2"></textarea>
                 </div>
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label class="form-label">Fecha inicio *</label>
                         <input type="date" th:field="*{fechaInicio}" class="form-control" required>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label class="form-label">Fecha fin *</label>
                         <input type="date" th:field="*{fechaFin}" class="form-control" required>
                     </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label d-block">Dias de la semana</label>
-                    <div class="form-check form-check-inline">
-                        <input type="checkbox" th:field="*{diasSeleccionados}" value="L" class="form-check-input" id="dL">
-                        <label for="dL" class="form-check-label">Lunes</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input type="checkbox" th:field="*{diasSeleccionados}" value="M" class="form-check-input" id="dM">
-                        <label for="dM" class="form-check-label">Martes</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input type="checkbox" th:field="*{diasSeleccionados}" value="X" class="form-check-input" id="dX">
-                        <label for="dX" class="form-check-label">Miercoles</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input type="checkbox" th:field="*{diasSeleccionados}" value="J" class="form-check-input" id="dJ">
-                        <label for="dJ" class="form-check-label">Jueves</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input type="checkbox" th:field="*{diasSeleccionados}" value="V" class="form-check-input" id="dV">
-                        <label for="dV" class="form-check-label">Viernes</label>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Horario</label>
+                        <input type="text" th:field="*{horario}" class="form-control"
+                               placeholder="Ej: 17:00-18:30">
                     </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Horario</label>
-                    <input type="text" th:field="*{horario}" class="form-control" placeholder="Ej: 17:00-18:30">
+                <div class="form-text">
+                    Para actividades que se repiten varios dias a la semana, usad el modulo Extraescolares.
                 </div>
             </div>
         </div>
@@ -69,24 +56,28 @@
             <div class="card-header">Precios y descuento</div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label">Precio completo *</label>
-                        <input type="number" step="0.01" th:field="*{precioMesCompleto}" class="form-control" required>
+                        <input type="number" step="0.01" th:field="*{precioMesCompleto}"
+                               class="form-control" required>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label">Precio medio *</label>
-                        <input type="number" step="0.01" th:field="*{precioMedioMes}" class="form-control" required>
+                        <input type="number" step="0.01" th:field="*{precioMedioMes}"
+                               class="form-control" required>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label">Descuento socio (%)</label>
-                        <input type="number" step="0.01" th:field="*{descuentoSocioPorcentaje}" class="form-control">
+                        <input type="number" step="0.01" th:field="*{descuentoSocioPorcentaje}"
+                               class="form-control">
                     </div>
                 </div>
             </div>
         </div>
 
         <button type="submit" class="btn btn-primary">
-            <i class="bi bi-save"></i> <span th:text="${editando} ? 'Guardar cambios' : 'Crear actividad'"></span>
+            <i class="bi bi-save"></i>
+            <span th:text="${editando} ? 'Guardar cambios' : 'Crear actividad'"></span>
         </button>
         <a th:href="@{/extras/actividades}" class="btn btn-outline-secondary">Cancelar</a>
     </form>

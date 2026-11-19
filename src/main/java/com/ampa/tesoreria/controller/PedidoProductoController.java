@@ -16,7 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.time.LocalDate;
 
 @Controller
-@RequestMapping("/extras/{productoId}/pedidos")
+@RequestMapping("/extras/productos/{productoId}/pedidos")
 @RequiredArgsConstructor
 public class PedidoProductoController {
 
@@ -45,7 +45,7 @@ public class PedidoProductoController {
         model.addAttribute("metodosPago", MetodoPago.values());
         model.addAttribute("editando", false);
         model.addAttribute("returnTo",
-                "/extras/" + productoId + "/pedidos/nuevo");
+                "/extras/productos/" + productoId + "/pedidos/nuevo");
         return "extras/productos/pedido-form";
     }
 

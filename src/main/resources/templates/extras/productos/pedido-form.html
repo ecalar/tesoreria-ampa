@@ -20,8 +20,7 @@
         (<span th:text="${#numbers.formatDecimal(producto.precioUnitario, 1, 2)}"></span> EUR / ud)
     </p>
 
-    <form th:action="${editando} ? @{'/extras/' + ${producto.id} + '/pedidos/' + ${form.id} + '/editar'}
-                                  : @{'/extras/' + ${producto.id} + '/pedidos/nuevo'}"
+    <form th:action="${editando} ? @{'/extras/productos/' + ${producto.id} + '/pedidos/' + ${form.id} + '/editar'} : @{'/extras/productos/' + ${producto.id} + '/pedidos/nuevo'}"
           th:object="${form}" method="post" class="mt-4" style="max-width: 800px;">
 
         <div class="card mb-3">
@@ -70,7 +69,7 @@
         <button type="submit" class="btn btn-primary">
             <i class="bi bi-save"></i> <span th:text="${editando} ? 'Guardar cambios' : 'Crear pedido'"></span>
         </button>
-        <a th:href="@{'/extras/' + ${producto.id}}" class="btn btn-outline-secondary">Cancelar</a>
+        <a th:href="@{'/extras/productos/' + ${producto.id}}" class="btn btn-outline-secondary">Cancelar</a>
     </form>
 </div>
 </body>

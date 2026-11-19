@@ -17,16 +17,16 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 th:text="${producto.nombre}"></h2>
         <div>
-            <a th:href="@{'/extras/' + ${producto.id} + '/editar'}" class="btn btn-outline-secondary">
+            <a th:href="@{'extras/productos/' + ${producto.id} + '/editar'}" class="btn btn-outline-secondary">
                 <i class="bi bi-pencil"></i> Editar
             </a>
-            <form th:action="@{'/extras/' + ${producto.id} + '/borrar'}" method="post" class="d-inline"
+            <form th:action="@{'extras/productos/' + ${producto.id} + '/borrar'}" method="post" class="d-inline"
                   onsubmit="return confirm('Borrar este producto? Solo es posible si no tiene pedidos.');">
                 <button type="submit" class="btn btn-outline-danger">
                     <i class="bi bi-trash"></i> Borrar
                 </button>
             </form>
-            <a th:href="@{/extras}" class="btn btn-outline-primary">
+            <a th:href="@{extras/productos}" class="btn btn-outline-primary">
                 <i class="bi bi-arrow-left"></i> Volver
             </a>
         </div>
@@ -94,16 +94,16 @@
                     <i class="bi bi-download"></i> Exportar
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" th:href="@{'/extras/' + ${producto.id} + '/export/pedidos/csv'}">Pedidos CSV</a></li>
-                    <li><a class="dropdown-item" th:href="@{'/extras/' + ${producto.id} + '/export/pedidos/xlsx'}">Pedidos Excel</a></li>
-                    <li><a class="dropdown-item" th:href="@{'/extras/' + ${producto.id} + '/export/pedidos/pdf'}">Pedidos PDF</a></li>
+                    <li><a class="dropdown-item" th:href="@{'extras/productos/' + ${producto.id} + '/export/pedidos/csv'}">Pedidos CSV</a></li>
+                    <li><a class="dropdown-item" th:href="@{'extras/productos/' + ${producto.id} + '/export/pedidos/xlsx'}">Pedidos Excel</a></li>
+                    <li><a class="dropdown-item" th:href="@{'extras/productos/' + ${producto.id} + '/export/pedidos/pdf'}">Pedidos PDF</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" th:href="@{'/extras/' + ${producto.id} + '/export/totales/csv'}">Totales CSV</a></li>
-                    <li><a class="dropdown-item" th:href="@{'/extras/' + ${producto.id} + '/export/totales/xlsx'}">Totales Excel</a></li>
-                    <li><a class="dropdown-item" th:href="@{'/extras/' + ${producto.id} + '/export/totales/pdf'}">Totales PDF</a></li>
+                    <li><a class="dropdown-item" th:href="@{'extras/productos/' + ${producto.id} + '/export/totales/csv'}">Totales CSV</a></li>
+                    <li><a class="dropdown-item" th:href="@{'extras/productos/' + ${producto.id} + '/export/totales/xlsx'}">Totales Excel</a></li>
+                    <li><a class="dropdown-item" th:href="@{'extras/productos/' + ${producto.id} + '/export/totales/pdf'}">Totales PDF</a></li>
                 </ul>
             </div>
-            <a th:href="@{'/extras/' + ${producto.id} + '/pedidos/nuevo'}" class="btn btn-sm btn-primary">
+            <a th:href="@{'extras/productos/' + ${producto.id} + '/pedidos/nuevo'}" class="btn btn-sm btn-primary">
                 <i class="bi bi-cart-plus"></i> Nuevo pedido
             </a>
         </div>
@@ -138,24 +138,24 @@
                     </td>
                     <td class="text-end">
                         <form th:unless="${pp.pagado}"
-                              th:action="@{'/extras/' + ${producto.id} + '/pedidos/' + ${pp.id} + '/pagar'}"
+                              th:action="@{'extras/productos/' + ${producto.id} + '/pedidos/' + ${pp.id} + '/pagar'}"
                               method="post" class="d-inline">
                             <button type="submit" class="btn btn-sm btn-success" title="Marcar pagado">
                                 <i class="bi bi-check"></i>
                             </button>
                         </form>
                         <form th:if="${pp.pagado}"
-                              th:action="@{'/extras/' + ${producto.id} + '/pedidos/' + ${pp.id} + '/desmarcar'}"
+                              th:action="@{'extras/productos/' + ${producto.id} + '/pedidos/' + ${pp.id} + '/desmarcar'}"
                               method="post" class="d-inline">
                             <button type="submit" class="btn btn-sm btn-outline-warning" title="Desmarcar">
                                 <i class="bi bi-x"></i>
                             </button>
                         </form>
-                        <a th:href="@{'/extras/' + ${producto.id} + '/pedidos/' + ${pp.id} + '/editar'}"
+                        <a th:href="@{'extras/productos/' + ${producto.id} + '/pedidos/' + ${pp.id} + '/editar'}"
                            class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        <form th:action="@{'/extras/' + ${producto.id} + '/pedidos/' + ${pp.id} + '/borrar'}"
+                        <form th:action="@{'extras/productos/' + ${producto.id} + '/pedidos/' + ${pp.id} + '/borrar'}"
                               method="post" class="d-inline"
                               onsubmit="return confirm('Borrar este pedido?');">
                             <button type="submit" class="btn btn-sm btn-outline-danger">

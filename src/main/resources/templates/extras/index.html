@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Extras')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+  <h2>Extras</h2>
+  <p class="text-muted">Selecciona que quieres gestionar.</p>
+
+  <div class="row mt-4">
+    <div class="col-md-6 mb-3">
+      <a th:href="@{/extras/productos}" class="text-decoration-none">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body text-center py-5">
+            <i class="bi bi-bag" style="font-size: 3rem; color: #1e3a5f;"></i>
+            <h3 class="mt-3">Productos</h3>
+            <p class="text-muted mb-0">
+              Sudaderas, camisetas y otros productos.
+            </p>
+            <p class="text-muted small mt-1">
+              <strong th:text="${numProductos}"></strong> productos registrados
+            </p>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-6 mb-3">
+      <a th:href="@{/extras/actividades}" class="text-decoration-none">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body text-center py-5">
+            <i class="bi bi-calendar-event" style="font-size: 3rem; color: #1e3a5f;"></i>
+            <h3 class="mt-3">Actividades</h3>
+            <p class="text-muted mb-0">
+              Talleres, excursiones y actividades puntuales.
+            </p>
+            <p class="text-muted small mt-1">
+              <strong th:text="${numActividades}"></strong> actividades registradas
+            </p>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

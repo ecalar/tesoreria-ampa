@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Controller
-@RequestMapping("/extras")
+@RequestMapping("/extras/productos")
 @RequiredArgsConstructor
 public class ProductoController {
 

@@ -12,7 +12,7 @@
 
     <h2 th:text="${editando} ? 'Editar producto' : 'Nuevo producto'"></h2>
 
-    <form th:action="${editando} ? @{'/extras/' + ${form.id} + '/editar'} : @{/extras/nuevo}"
+    <form th:action="${editando} ? @{'/extras/productos/' + ${form.id} + '/editar'} : @{/extras/productos/nuevo}"
           th:object="${form}" method="post" class="mt-4" style="max-width: 800px;">
 
         <div class="card mb-3">
@@ -44,7 +44,7 @@
         <button type="submit" class="btn btn-primary">
             <i class="bi bi-save"></i> <span th:text="${editando} ? 'Guardar cambios' : 'Crear producto'"></span>
         </button>
-        <a th:href="@{/extras}" class="btn btn-outline-secondary">Cancelar</a>
+        <a th:href="@{/extras/productos}" class="btn btn-outline-secondary">Cancelar</a>
     </form>
 </div>
 </body>

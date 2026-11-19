@@ -4,6 +4,7 @@ import com.ampa.tesoreria.dto.ActividadForm;
 import com.ampa.tesoreria.model.Actividad;
 import com.ampa.tesoreria.model.Inscripcion;
 import com.ampa.tesoreria.model.enums.EstadoInscripcion;
+import com.ampa.tesoreria.model.enums.Modalidad;
 import com.ampa.tesoreria.model.enums.TipoActividad;
 import com.ampa.tesoreria.repository.ActividadRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,14 +25,23 @@ public class ActividadService {
     private final CursoService cursoService;
 
     // ------------------------------------------------------------
-    // LISTADOS Y BÚSQUEDA
+    // LISTADOS
     // ------------------------------------------------------------
     public List<Actividad> listarExtraescolares(String q) {
+        return listarPorTipo(TipoActividad.EXTRAESCOLAR, q);
+    }
+
+    public List<Actividad> listarEscuelas(String q) {
+        return listarPorTipo(TipoActividad.ESCUELA, q);
+    }
+
+    public List<Actividad> listarPorTipo(TipoActividad tipo, String q) {
         Long cursoId = cursoService.getCursoActivo().getId();
         if (q != null && !q.isBlank()) {
-            return actividadRepository.findByCursoIdAndNombreContainingIgnoreCase(cursoId, q);
+            List<Actividad> todos = actividadRepository.findByCursoIdAndNombreContainingIgnoreCase(cursoId, q);
+            return todos.stream().filter(a -> a.getTipo() == tipo).toList();
         }
-        return actividadRepository.findByCursoIdAndTipo(cursoId, TipoActividad.EXTRAESCOLAR);
+        return actividadRepository.findByCursoIdAndTipo(cursoId, tipo);
     }
 
     public Actividad findById(Long id) {
@@ -43,11 +53,11 @@ public class ActividadService {
     // CREAR / EDITAR / BORRAR
     // ------------------------------------------------------------
     @Transactional
-    public Actividad crear(ActividadForm form) {
+    public Actividad crear(TipoActividad tipo, ActividadForm form) {
         validarFechas(form);
         Actividad actividad = Actividad.builder()
                 .curso(cursoService.getCursoActivo())
-                .tipo(TipoActividad.EXTRAESCOLAR)
+                .tipo(tipo)
                 .nombre(form.getNombre())
                 .descripcion(form.getDescripcion())
                 .fechaInicio(form.getFechaInicio())
@@ -56,9 +66,13 @@ public class ActividadService {
                 .horario(form.getHorario())
                 .precioMesCompleto(form.getPrecioMesCompleto())
                 .precioMedioMes(form.getPrecioMedioMes())
-                .descuentoSocioPorcentaje(form.getDescuentoSocioPorcentaje())
-                .tieneFianza(form.isTieneFianza())
-                .importeFianza(form.isTieneFianza() ? form.getImporteFianza() : null)
+                .precioPorDia(tipo != TipoActividad.EXTRAESCOLAR ? form.getPrecioPorDia() : null)
+                .descuentoSocioPorcentaje(form.getDescuentoSocioPorcentaje() != null
+                        ? form.getDescuentoSocioPorcentaje() : BigDecimal.ZERO)
+                // La fianza SOLO se persiste si es extraescolar
+                .tieneFianza(tipo == TipoActividad.EXTRAESCOLAR && form.isTieneFianza())
+                .importeFianza(tipo == TipoActividad.EXTRAESCOLAR && form.isTieneFianza()
+                        ? form.getImporteFianza() : null)
                 .build();
         return actividadRepository.save(actividad);
     }
@@ -75,9 +89,19 @@ public class ActividadService {
         a.setHorario(form.getHorario());
         a.setPrecioMesCompleto(form.getPrecioMesCompleto());
         a.setPrecioMedioMes(form.getPrecioMedioMes());
-        a.setDescuentoSocioPorcentaje(form.getDescuentoSocioPorcentaje());
-        a.setTieneFianza(form.isTieneFianza());
-        a.setImporteFianza(form.isTieneFianza() ? form.getImporteFianza() : null);
+        a.setPrecioPorDia(a.getTipo() != TipoActividad.EXTRAESCOLAR ? form.getPrecioPorDia() : null);
+        a.setDescuentoSocioPorcentaje(form.getDescuentoSocioPorcentaje() != null
+                ? form.getDescuentoSocioPorcentaje() : BigDecimal.ZERO);
+
+        // Solo extraescolares manejan fianza
+        if (a.getTipo() == TipoActividad.EXTRAESCOLAR) {
+            a.setTieneFianza(form.isTieneFianza());
+            a.setImporteFianza(form.isTieneFianza() ? form.getImporteFianza() : null);
+        } else {
+            a.setTieneFianza(false);
+            a.setImporteFianza(null);
+        }
+
         return actividadRepository.save(a);
     }
 
@@ -96,7 +120,7 @@ public class ActividadService {
     }
 
     // ------------------------------------------------------------
-    // UTILIDADES DE FORMULARIO
+    // FORMULARIO
     // ------------------------------------------------------------
     public ActividadForm toForm(Actividad a) {
         ActividadForm form = new ActividadForm();
@@ -111,12 +135,71 @@ public class ActividadService {
         form.setHorario(a.getHorario());
         form.setPrecioMesCompleto(a.getPrecioMesCompleto());
         form.setPrecioMedioMes(a.getPrecioMedioMes());
+        form.setPrecioPorDia(a.getPrecioPorDia());
         form.setDescuentoSocioPorcentaje(a.getDescuentoSocioPorcentaje());
         form.setTieneFianza(a.isTieneFianza());
         form.setImporteFianza(a.getImporteFianza());
         return form;
     }
 
+    // ------------------------------------------------------------
+    // CÁLCULOS
+    // ------------------------------------------------------------
+
+    /** Calcula el importe base segun modalidad y dias (sin aplicar descuento) */
+    public BigDecimal calcularImporteBase(Actividad actividad, Modalidad modalidad, Integer diasAsistidos) {
+        return switch (modalidad) {
+            case COMPLETO -> actividad.getPrecioMesCompleto();
+            case MEDIO -> actividad.getPrecioMedioMes();
+            case POR_DIAS -> {
+                if (actividad.getPrecioPorDia() == null) {
+                    throw new IllegalArgumentException("La actividad no tiene configurado el precio por dia");
+                }
+                if (diasAsistidos == null || diasAsistidos <= 0) {
+                    throw new IllegalArgumentException("Indica el numero de dias para la modalidad POR_DIAS");
+                }
+                yield actividad.getPrecioPorDia().multiply(BigDecimal.valueOf(diasAsistidos));
+            }
+        };
+    }
+
+    /** Aplica el descuento socio a un importe base */
+    public BigDecimal aplicarDescuento(Actividad actividad, BigDecimal importeBase) {
+        BigDecimal descuento = actividad.getDescuentoSocioPorcentaje() == null
+                ? BigDecimal.ZERO
+                : actividad.getDescuentoSocioPorcentaje();
+        BigDecimal factor = BigDecimal.ONE.subtract(
+                descuento.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
+        return importeBase.multiply(factor).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /** Compatibilidad con llamadas anteriores: importe base + descuento */
+    public BigDecimal calcularImporteMensual(Actividad actividad, BigDecimal importeBase) {
+        return aplicarDescuento(actividad, importeBase);
+    }
+
+    /** Fianza: precio mes completo con descuento aplicado (solo extraescolares) */
+    public BigDecimal calcularFianza(Actividad actividad) {
+        if (!actividad.isTieneFianza() || actividad.getImporteFianza() == null) {
+            return null;
+        }
+        return calcularImporteMensual(actividad, actividad.getImporteFianza());
+    }
+
+    public long countInscripcionesActivas(Actividad a) {
+        return a.getInscripciones().stream()
+                .filter(i -> i.getEstado() == EstadoInscripcion.ACTIVA)
+                .count();
+    }
+
+    public BigDecimal totalMensualActivo(Actividad a) {
+        return a.getInscripciones().stream()
+                .filter(i -> i.getEstado() == EstadoInscripcion.ACTIVA)
+                .map(Inscripcion::getImporteMensualCalculado)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    // ------------------------------------------------------------
     private void validarFechas(ActividadForm form) {
         if (form.getFechaInicio() == null || form.getFechaFin() == null) {
             throw new IllegalArgumentException("Las fechas de inicio y fin son obligatorias");
@@ -129,42 +212,5 @@ public class ActividadService {
     private String joinDias(List<String> dias) {
         if (dias == null || dias.isEmpty()) return null;
         return String.join(",", dias);
-    }
-
-    // ------------------------------------------------------------
-    // CÁLCULOS
-    // ------------------------------------------------------------
-
-    /** Importe mensual de una inscripción aplicando el descuento socio de la actividad */
-    public BigDecimal calcularImporteMensual(Actividad actividad, BigDecimal importeBase) {
-        BigDecimal descuento = actividad.getDescuentoSocioPorcentaje() == null
-                ? BigDecimal.ZERO
-                : actividad.getDescuentoSocioPorcentaje();
-        BigDecimal factor = BigDecimal.ONE.subtract(
-                descuento.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
-        return importeBase.multiply(factor).setScale(2, RoundingMode.HALF_UP);
-    }
-
-    /** Fianza: precio mes completo con descuento aplicado (snapshot al inscribir) */
-    public BigDecimal calcularFianza(Actividad actividad) {
-        if (!actividad.isTieneFianza() || actividad.getImporteFianza() == null) {
-            return null;
-        }
-        return calcularImporteMensual(actividad, actividad.getImporteFianza());
-    }
-
-    /** Nº de inscripciones activas */
-    public long countInscripcionesActivas(Actividad a) {
-        return a.getInscripciones().stream()
-                .filter(i -> i.getEstado() == EstadoInscripcion.ACTIVA)
-                .count();
-    }
-
-    /** Total mensual facturado (suma de importes mensuales de inscripciones activas) */
-    public BigDecimal totalMensualActivo(Actividad a) {
-        return a.getInscripciones().stream()
-                .filter(i -> i.getEstado() == EstadoInscripcion.ACTIVA)
-                .map(Inscripcion::getImporteMensualCalculado)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

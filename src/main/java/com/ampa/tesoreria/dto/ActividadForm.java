@@ -23,13 +23,13 @@ public class ActividadForm {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate fechaFin;
 
-    /** Días seleccionados como checkboxes: L, M, X, J, V */
     private List<String> diasSeleccionados = new ArrayList<>();
 
     private String horario;
 
     private BigDecimal precioMesCompleto;
     private BigDecimal precioMedioMes;
+    private BigDecimal precioPorDia;
     private BigDecimal descuentoSocioPorcentaje;
 
     private boolean tieneFianza;

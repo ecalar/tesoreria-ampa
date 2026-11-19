@@ -2,16 +2,14 @@ package com.ampa.tesoreria.service;
 
 import com.ampa.tesoreria.dto.InscripcionForm;
 import com.ampa.tesoreria.model.*;
-import com.ampa.tesoreria.model.enums.EstadoFianza;
-import com.ampa.tesoreria.model.enums.EstadoInscripcion;
-import com.ampa.tesoreria.model.enums.MetodoPago;
-import com.ampa.tesoreria.model.enums.Modalidad;
+import com.ampa.tesoreria.model.enums.*;
 import com.ampa.tesoreria.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -80,30 +78,33 @@ public class InscripcionService {
         if (form.getModalidad() == null) {
             throw new IllegalArgumentException("Debes elegir una modalidad");
         }
-        if (form.getModalidad() == Modalidad.POR_DIAS) {
+
+        // Validar modalidades segun tipo de actividad
+        if (actividad.getTipo() == TipoActividad.EXTRAESCOLAR && form.getModalidad() == Modalidad.POR_DIAS) {
             throw new IllegalArgumentException(
                     "Las extraescolares no admiten la modalidad POR_DIAS, solo COMPLETO o MEDIO");
         }
+        if (form.getModalidad() == Modalidad.POR_DIAS
+                && (form.getDiasAsistidos() == null || form.getDiasAsistidos() <= 0)) {
+            throw new IllegalArgumentException("Debes indicar el numero de dias para la modalidad POR_DIAS");
+        }
 
         // Calcular importe base
-        BigDecimal importeBase = form.getModalidad() == Modalidad.COMPLETO
-                ? actividad.getPrecioMesCompleto()
-                : actividad.getPrecioMedioMes();
-
+        BigDecimal importeBase = actividadService.calcularImporteBase(
+                actividad, form.getModalidad(), form.getDiasAsistidos());
         if (importeBase == null) {
             throw new IllegalArgumentException(
                     "La actividad no tiene configurado el precio para la modalidad " + form.getModalidad());
         }
 
-        // NUEVO: solo aplicar descuento si el alumno pertenece a un socio
+        // Aplicar descuento socio solo si el alumno pertenece a un socio
         BigDecimal importeCalculado;
         BigDecimal fianzaImporte;
-
         if (alumno.getSocio() != null) {
-            importeCalculado = actividadService.calcularImporteMensual(actividad, importeBase);
+            importeCalculado = actividadService.aplicarDescuento(actividad, importeBase);
             fianzaImporte = actividadService.calcularFianza(actividad);
         } else {
-            importeCalculado = importeBase.setScale(2, java.math.RoundingMode.HALF_UP);
+            importeCalculado = importeBase.setScale(2, RoundingMode.HALF_UP);
             fianzaImporte = actividad.isTieneFianza() ? actividad.getImporteFianza() : null;
         }
 
@@ -111,6 +112,9 @@ public class InscripcionService {
                 .actividad(actividad)
                 .alumno(alumno)
                 .modalidad(form.getModalidad())
+                .diasAsistidos(form.getModalidad() == Modalidad.POR_DIAS ? form.getDiasAsistidos() : null)
+                .diasSemanaSeleccionados(form.getModalidad() == Modalidad.POR_DIAS
+                        ? form.getDiasSemanaSeleccionados() : null)
                 .importeMensualCalculado(importeCalculado)
                 .permisoImagen(form.getPermisoImagen())
                 .fechaInscripcion(LocalDate.now())
@@ -121,9 +125,7 @@ public class InscripcionService {
                 .pagosMensuales(new ArrayList<>())
                 .build();
 
-        // Generar pagos mensuales
         generarPagosMensuales(inscripcion, actividad, importeCalculado);
-
         return inscripcionRepository.save(inscripcion);
     }
 
@@ -158,19 +160,24 @@ public class InscripcionService {
 
         // Si cambia la modalidad, recalcular importe y actualizar pagos pendientes
         if (form.getModalidad() != null && form.getModalidad() != i.getModalidad()) {
-            if (form.getModalidad() == Modalidad.POR_DIAS) {
+            Actividad actividad = i.getActividad();
+
+            if (actividad.getTipo() == TipoActividad.EXTRAESCOLAR && form.getModalidad() == Modalidad.POR_DIAS) {
                 throw new IllegalArgumentException("Las extraescolares no admiten POR_DIAS");
             }
-            Actividad actividad = i.getActividad();
-            BigDecimal importeBase = form.getModalidad() == Modalidad.COMPLETO
-                    ? actividad.getPrecioMesCompleto()
-                    : actividad.getPrecioMedioMes();
-            BigDecimal nuevoImporte = actividadService.calcularImporteMensual(actividad, importeBase);
+
+            BigDecimal importeBase = actividadService.calcularImporteBase(
+                    actividad, form.getModalidad(), form.getDiasAsistidos());
+            BigDecimal nuevoImporte = (i.getAlumno().getSocio() != null)
+                    ? actividadService.aplicarDescuento(actividad, importeBase)
+                    : importeBase.setScale(2, RoundingMode.HALF_UP);
 
             i.setModalidad(form.getModalidad());
+            i.setDiasAsistidos(form.getModalidad() == Modalidad.POR_DIAS ? form.getDiasAsistidos() : null);
+            i.setDiasSemanaSeleccionados(form.getModalidad() == Modalidad.POR_DIAS
+                    ? form.getDiasSemanaSeleccionados() : null);
             i.setImporteMensualCalculado(nuevoImporte);
 
-            // Actualizar solo los meses NO pagados
             for (PagoMensual p : i.getPagosMensuales()) {
                 if (!p.isPagado() && !p.isCubiertoPorFianza()) {
                     p.setImporte(nuevoImporte);

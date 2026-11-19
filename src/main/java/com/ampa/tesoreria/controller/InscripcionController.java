@@ -41,15 +41,17 @@ public class InscripcionController {
         form.setActividadId(actividadId);
         form.setModalidad(Modalidad.COMPLETO);
         if (alumnoCreado != null) {
-            form.setAlumnoId(alumnoCreado);   // ← preselección
+            form.setAlumnoId(alumnoCreado);
         }
 
+        var actividad = actividadService.findById(actividadId);
+
         model.addAttribute("form", form);
-        model.addAttribute("actividad", actividadService.findById(actividadId));
+        model.addAttribute("actividad", actividad);
         model.addAttribute("alumnos", alumnoService.listarTodos());
-        model.addAttribute("modalidades", List.of(Modalidad.COMPLETO, Modalidad.MEDIO));
+        model.addAttribute("modalidades", modalidadesDe(actividad));
         model.addAttribute("editando", false);
-        model.addAttribute("returnTo", "/extraescolares/" + actividadId + "/inscripciones/nueva");
+        model.addAttribute("returnTo", "/" + rutaBase(actividad) + "/" + actividadId + "/inscripciones/nueva");
         return "extraescolares/inscripcion-form";
     }
 
@@ -225,5 +227,17 @@ public class InscripcionController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/extraescolares/" + actividadId + "/inscripciones/" + id;
+    }
+
+    private List<Modalidad> modalidadesDe(com.ampa.tesoreria.model.Actividad actividad) {
+        if (actividad.getTipo() == com.ampa.tesoreria.model.enums.TipoActividad.EXTRAESCOLAR) {
+            return List.of(Modalidad.COMPLETO, Modalidad.MEDIO);
+        }
+        return List.of(Modalidad.COMPLETO, Modalidad.MEDIO, Modalidad.POR_DIAS);
+    }
+
+    private String rutaBase(com.ampa.tesoreria.model.Actividad actividad) {
+        return actividad.getTipo() == com.ampa.tesoreria.model.enums.TipoActividad.EXTRAESCOLAR
+                ? "extraescolares" : "escuelas";
     }
 }

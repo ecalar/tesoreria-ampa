@@ -12,6 +12,8 @@ public class InscripcionForm {
     private Long actividadId;
     private Long alumnoId;
     private Modalidad modalidad;
+    private Integer diasAsistidos;
+    private String diasSemanaSeleccionados;
     private String observaciones;
     private Boolean permisoImagen;
 }

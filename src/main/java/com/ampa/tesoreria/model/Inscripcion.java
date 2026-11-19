@@ -81,6 +81,9 @@ public class Inscripcion {
     @Column(length = 500)
     private String fianzaObservaciones;
 
+    @OneToOne(mappedBy = "inscripcion", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private DevolucionInscripcion devolucionInscripcion;
+
     // Relaciones
 
     @OneToMany(mappedBy = "inscripcion", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -105,6 +108,12 @@ public class Inscripcion {
 
     public void setDevolucionFianza(DevolucionFianza devolucion) {
         this.devolucionFianza = devolucion;
+        if (devolucion != null) {
+            devolucion.setInscripcion(this);
+        }
+    }
+    public void setDevolucionInscripcion(DevolucionInscripcion devolucion) {
+        this.devolucionInscripcion = devolucion;
         if (devolucion != null) {
             devolucion.setInscripcion(this);
         }

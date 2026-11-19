@@ -75,19 +75,28 @@
     </div>
 
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card bg-light"><div class="card-body py-2">
                 <small class="text-muted">Cobrado</small>
-                <h5 class="mb-0" th:text="${#numbers.formatDecimal(totalPagado, 1, 2)} + ' EUR'"></h5>
+                <h5 class="mb-0 text-success"
+                    th:text="${#numbers.formatDecimal(totalPagado, 1, 2)} + ' EUR'"></h5>
             </div></div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card bg-light"><div class="card-body py-2">
-                <small class="text-muted">Pendiente</small>
-                <h5 class="mb-0" th:text="${#numbers.formatDecimal(totalPendiente, 1, 2)} + ' EUR'"></h5>
+                <small class="text-muted">Devuelto</small>
+                <h5 class="mb-0 text-danger"
+                    th:text="${#numbers.formatDecimal(totalDevuelto != null ? totalDevuelto : 0, 1, 2)} + ' EUR'"></h5>
             </div></div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Neto</small>
+                <h5 class="mb-0"
+                    th:text="${#numbers.formatDecimal(totalPagado - (totalDevuelto != null ? totalDevuelto : 0), 1, 2)} + ' EUR'"></h5>
+            </div></div>
+        </div>
+        <div class="col-md-3">
             <div class="card bg-light"><div class="card-body py-2">
                 <small class="text-muted">Inscritos</small>
                 <h5 class="mb-0" th:text="${inscripciones.size()}"></h5>

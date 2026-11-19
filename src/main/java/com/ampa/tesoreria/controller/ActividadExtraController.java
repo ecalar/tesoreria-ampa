@@ -126,6 +126,17 @@ public class ActividadExtraController {
             totalPagado = totalPagado.add(inscripcionService.totalPagado(i));
             totalPendiente = totalPendiente.add(inscripcionService.totalPendiente(i));
         }
+        BigDecimal totalDevuelto = BigDecimal.ZERO;
+        for (Inscripcion i : inscripciones) {
+            if (i.getDevolucionInscripcion() != null) {
+                totalDevuelto = totalDevuelto.add(i.getDevolucionInscripcion().getImporte());
+            }
+        }
+
+        model.addAttribute("totalPagado", totalPagado);
+        model.addAttribute("totalPendiente", totalPendiente);
+        model.addAttribute("totalDevuelto", totalDevuelto);
+        model.addAttribute("totalNeto", totalPagado.subtract(totalDevuelto));
 
         model.addAttribute("actividad", actividad);
         model.addAttribute("inscripciones", inscripciones);

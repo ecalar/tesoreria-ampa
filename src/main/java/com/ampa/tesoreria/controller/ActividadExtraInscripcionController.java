@@ -14,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -151,6 +152,40 @@ public class ActividadExtraInscripcionController {
                             RedirectAttributes redirectAttributes) {
         inscripcionService.reactivar(id);
         redirectAttributes.addFlashAttribute("success", "Inscripcion reactivada");
+        return "redirect:/extras/actividades/" + actividadId + "/inscripciones/" + id;
+    }
+
+    // ------------------------------------------------------------
+// DEVOLUCION (solo cuando esta de baja)
+// ------------------------------------------------------------
+    @PostMapping("/{id}/devolucion")
+    public String registrarDevolucion(@PathVariable Long actividadId,
+                                      @PathVariable Long id,
+                                      @RequestParam(required = false)
+                                      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
+                                      @RequestParam BigDecimal importe,
+                                      @RequestParam MetodoPago metodo,
+                                      @RequestParam(required = false) String observaciones,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            inscripcionService.devolverImporte(id, fecha, importe, metodo, observaciones);
+            redirectAttributes.addFlashAttribute("success", "Devolucion registrada");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/extras/actividades/" + actividadId + "/inscripciones/" + id;
+    }
+
+    @PostMapping("/{id}/devolucion/eliminar")
+    public String eliminarDevolucion(@PathVariable Long actividadId,
+                                     @PathVariable Long id,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            inscripcionService.eliminarDevolucion(id);
+            redirectAttributes.addFlashAttribute("success", "Devolucion eliminada");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
         return "redirect:/extras/actividades/" + actividadId + "/inscripciones/" + id;
     }
 

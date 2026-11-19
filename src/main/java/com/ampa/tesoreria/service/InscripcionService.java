@@ -222,6 +222,45 @@ public class InscripcionService {
         inscripcionRepository.save(i);
     }
 
+    @Transactional
+    public void devolverImporte(Long inscripcionId, LocalDate fecha, BigDecimal importe,
+                                MetodoPago metodo, String observaciones) {
+        Inscripcion i = findById(inscripcionId);
+        if (i.getEstado() != EstadoInscripcion.BAJA) {
+            throw new IllegalStateException(
+                    "Solo se puede devolver el importe a inscripciones dadas de baja");
+        }
+        if (i.getDevolucionInscripcion() != null) {
+            throw new IllegalStateException("Esta inscripcion ya tiene una devolucion registrada");
+        }
+        if (importe == null || importe.signum() <= 0) {
+            throw new IllegalArgumentException("El importe a devolver debe ser mayor que 0");
+        }
+        if (importe.compareTo(totalPagado(i)) > 0) {
+            throw new IllegalArgumentException(
+                    "El importe a devolver no puede superar lo ya cobrado (" + totalPagado(i) + " EUR)");
+        }
+
+        DevolucionInscripcion dev = DevolucionInscripcion.builder()
+                .fecha(fecha != null ? fecha : LocalDate.now())
+                .importe(importe)
+                .metodoPago(metodo)
+                .observaciones(observaciones)
+                .build();
+        i.setDevolucionInscripcion(dev);
+        inscripcionRepository.save(i);
+    }
+
+    @Transactional
+    public void eliminarDevolucion(Long inscripcionId) {
+        Inscripcion i = findById(inscripcionId);
+        if (i.getDevolucionInscripcion() == null) {
+            throw new IllegalStateException("Esta inscripcion no tiene devolucion registrada");
+        }
+        i.setDevolucionInscripcion(null);
+        inscripcionRepository.save(i);
+    }
+
     // ------------------------------------------------------------
     // PAGOS MENSUALES
     // ------------------------------------------------------------

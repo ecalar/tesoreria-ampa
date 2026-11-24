@@ -1,6 +1,7 @@
 package com.ampa.tesoreria.controller;
 
 import com.ampa.tesoreria.dto.AlumnoSimpleDTO;
+import com.ampa.tesoreria.dto.SocioSimpleDTO;
 import com.ampa.tesoreria.model.Alumno;
 import com.ampa.tesoreria.model.Socio;
 import com.ampa.tesoreria.service.AlumnoService;
@@ -51,6 +52,25 @@ public class FotosAjaxController {
         dto.setNombreCompleto(a.getNombreCompleto());
         dto.setCurso(a.getCurso());
         dto.setEsSocio(a.getSocio() != null);
+        return dto;
+    }
+
+    /** Buscar socios por nombre/apellidos/DNI */
+    @GetMapping("/socios/buscar")
+    public List<SocioSimpleDTO> buscarSocios(@RequestParam String q) {
+        return socioService.listarTodos().stream()
+                .filter(s -> (s.getNombre() + " " + s.getApellidos()).toLowerCase().contains(q.toLowerCase())
+                        || s.getDni().toLowerCase().contains(q.toLowerCase()))
+                .limit(20)
+                .map(this::toSocioDTO)
+                .toList();
+    }
+
+    private SocioSimpleDTO toSocioDTO(Socio s) {
+        SocioSimpleDTO dto = new SocioSimpleDTO();
+        dto.setId(s.getId());
+        dto.setNombreCompleto(s.getNombre() + " " + s.getApellidos());
+        dto.setDni(s.getDni());
         return dto;
     }
 }

@@ -62,7 +62,8 @@
           <input type="text" id="buscadorSocio" class="form-control"
                  placeholder="Escribe nombre, apellidos o DNI..."
                  autocomplete="off">
-          <div id="resultadosSocios" class="list-group mt-2" style="max-height: 250px; overflow-y: auto; display: none;"></div>
+          <div id="resultadosSocios" class="list-group mt-2"
+               style="max-height: 250px; overflow-y: auto; display: none;"></div>
         </div>
 
         <div class="mb-3">
@@ -100,7 +101,6 @@
           <select th:field="*{alumnoId}" id="selectAlumnoNoSocio" class="form-select" disabled>
             <option value="">-- Selecciona un alumno no socio --</option>
           </select>
-          <input th:if="${editando}" type="hidden" th:field="*{alumnoId}">
           <div class="mt-2">
             <a th:href="@{/alumnos/nuevo-no-socio(returnTo=${returnTo})}"
                class="btn btn-sm btn-outline-primary">
@@ -148,7 +148,24 @@
       </div>
       <div class="card-body">
         <div id="gruposContainer">
-          <!-- JS los añade aquí -->
+          <!-- Renderizado con Thymeleaf: si estamos editando, vienen los grupos existentes -->
+          <div th:each="g, iter : *{grupos}" class="row mb-2 align-items-end grupo-row">
+            <div class="col-md-6">
+              <label class="form-label small">Curso</label>
+              <input type="text" th:field="*{grupos[__${iter.index}__].curso}"
+                     class="form-control form-control-sm" placeholder="Ej: 1ºB">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small">Cantidad</label>
+              <input type="number" min="0" th:field="*{grupos[__${iter.index}__].cantidad}"
+                     class="form-control form-control-sm">
+            </div>
+            <div class="col-md-3">
+              <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-grupo">
+                <i class="bi bi-trash"></i> Quitar
+              </button>
+            </div>
+          </div>
         </div>
         <button type="button" id="btnAddGrupo" class="btn btn-sm btn-outline-primary mt-2">
           <i class="bi bi-plus-lg"></i> Añadir grupal
@@ -188,13 +205,11 @@
 <script th:inline="javascript">
   /*<![CDATA[*/
   // ============================================================
-  // ESTADO INICIAL
+  // ESTADO
   // ============================================================
-  var alumnosDelSocio = [];        // [{id, nombreCompleto, curso}]
-  var hermanosDelAlumno = [];      // [{id, nombreCompleto, curso}]
-  var hermanosSeleccionados = [];  // ids de hermanos seleccionados
-  var hermanosManual = [];         // [{nombre, curso}] para no socios
-  var grupos = [];                 // [{curso, cantidad}]
+  var hermanosDelAlumno = [];
+  var hermanosSeleccionados = [];
+  var hermanosManual = [];
   var alumnoEditandoId = /*[[${form.alumnoId}]]*/ null;
 
   // ============================================================
@@ -267,11 +282,9 @@
       buscadorSocio.value = socio.nombreCompleto;
       document.getElementById('selectAlumnoSocio').disabled = false;
 
-      // Cargar alumnos del socio
       fetch('/fotos/ajax/socios/' + socio.id + '/alumnos')
           .then(function(r) { return r.json(); })
           .then(function(alumnos) {
-              alumnosDelSocio = alumnos;
               var select = document.getElementById('selectAlumnoSocio');
               select.innerHTML = '<option value="">-- Selecciona un alumno --</option>';
               alumnos.forEach(function(a) {
@@ -284,17 +297,17 @@
   }
 
   // ============================================================
-  // SELECCIÓN DE ALUMNO (socio)
+  // SELECCIÓN DE ALUMNO (socio) -> cargar hermanos
   // ============================================================
   var selectAlumnoSocio = document.getElementById('selectAlumnoSocio');
   selectAlumnoSocio.addEventListener('change', function() {
       var alumnoId = this.value;
       if (!alumnoId) {
           hermanosDelAlumno = [];
+          hermanosSeleccionados = [];
           renderHermanosSocio();
           return;
       }
-      // Cargar hermanos
       fetch('/fotos/ajax/alumnos/' + alumnoId + '/hermanos')
           .then(function(r) { return r.json(); })
           .then(function(hermanos) {
@@ -311,16 +324,15 @@
       }
       var html = '';
       hermanosDelAlumno.forEach(function(h) {
+          var checked = hermanosSeleccionados.indexOf(h.id) >= 0 ? 'checked' : '';
           html += '<div class="form-check">' +
               '<input class="form-check-input" type="checkbox" value="' + h.id + '" ' +
-              'id="hermanoSocio-' + h.id + '" ' +
-              (hermanosSeleccionados.indexOf(h.id) >= 0 ? 'checked' : '') + '>' +
+              'id="hermanoSocio-' + h.id + '" ' + checked + '>' +
               '<label class="form-check-label" for="hermanoSocio-' + h.id + '">' +
               h.nombreCompleto + ' (' + h.curso + ')</label>' +
               '</div>';
       });
       cont.innerHTML = html;
-      // Listener para los checkboxes
       cont.querySelectorAll('input[type=checkbox]').forEach(function(cb) {
           cb.addEventListener('change', function() {
               var id = parseInt(this.value);
@@ -344,7 +356,7 @@
       hermanosNoSocioContainer.innerHTML = '';
       hermanosManual.forEach(function(h, i) {
           var row = document.createElement('div');
-          row.className = 'row mb-2 align-items-end';
+          row.className = 'row mb-2 align-items-end hermano-row';
           row.innerHTML =
               '<div class="col-md-5">' +
                   '<label class="form-label small">Nombre</label>' +
@@ -361,7 +373,6 @@
               '</div>';
           hermanosNoSocioContainer.appendChild(row);
       });
-      // Listener para eliminar
       hermanosNoSocioContainer.querySelectorAll('.btn-eliminar-hermano').forEach(function(btn) {
           btn.addEventListener('click', function() {
               var idx = parseInt(this.getAttribute('data-index'));
@@ -377,16 +388,33 @@
   });
 
   // ============================================================
-  // GRUPALES
+  // GRUPOS (sin perder lo escrito al añadir)
   // ============================================================
   var gruposContainer = document.getElementById('gruposContainer');
   var btnAddGrupo = document.getElementById('btnAddGrupo');
 
+  function sincronizarGruposDesdeDOM() {
+      var rows = gruposContainer.querySelectorAll('.grupo-row');
+      // Recolectamos los valores actuales del DOM
+      var nuevosGrupos = [];
+      rows.forEach(function(row) {
+          var curso = row.querySelector('input[name$=".curso"]');
+          var cantidad = row.querySelector('input[name$=".cantidad"]');
+          nuevosGrupos.push({
+              curso: curso ? curso.value : '',
+              cantidad: cantidad ? (parseInt(cantidad.value) || 0) : 0
+          });
+      });
+      return nuevosGrupos;
+  }
+
   function renderGrupos() {
+      // Reconstruye los inputs desde el array
+      var grupos = sincronizarGruposDesdeDOM();
       gruposContainer.innerHTML = '';
       grupos.forEach(function(g, i) {
           var row = document.createElement('div');
-          row.className = 'row mb-2 align-items-end';
+          row.className = 'row mb-2 align-items-end grupo-row';
           row.innerHTML =
               '<div class="col-md-6">' +
                   '<label class="form-label small">Curso</label>' +
@@ -403,19 +431,119 @@
               '</div>';
           gruposContainer.appendChild(row);
       });
-      // Listener para eliminar
       gruposContainer.querySelectorAll('.btn-eliminar-grupo').forEach(function(btn) {
           btn.addEventListener('click', function() {
               var idx = parseInt(this.getAttribute('data-index'));
-              grupos.splice(idx, 1);
-              renderGrupos();
+              var gruposActuales = sincronizarGruposDesdeDOM();
+              gruposActuales.splice(idx, 1);
+              // Re-renderizamos desde el array filtrado
+              gruposContainer.innerHTML = '';
+              gruposActuales.forEach(function(g, i) {
+                  var row = document.createElement('div');
+                  row.className = 'row mb-2 align-items-end grupo-row';
+                  row.innerHTML =
+                      '<div class="col-md-6">' +
+                          '<label class="form-label small">Curso</label>' +
+                          '<input type="text" name="grupos[' + i + '].curso" value="' + (g.curso || '') + '" class="form-control form-control-sm" placeholder="Ej: 1ºB">' +
+                      '</div>' +
+                      '<div class="col-md-3">' +
+                          '<label class="form-label small">Cantidad</label>' +
+                          '<input type="number" min="0" name="grupos[' + i + '].cantidad" value="' + (g.cantidad || 0) + '" class="form-control form-control-sm">' +
+                      '</div>' +
+                      '<div class="col-md-3">' +
+                          '<button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-grupo" data-index="' + i + '">' +
+                              '<i class="bi bi-trash"></i> Quitar' +
+                          '</button>' +
+                      '</div>';
+                  gruposContainer.appendChild(row);
+              });
+              // Re-enganchar listeners
+              gruposContainer.querySelectorAll('.btn-eliminar-grupo').forEach(function(b) {
+                  b.addEventListener('click', arguments.callee); // fallback
+              });
+              // Reasignar listener recursivo (simplificado: recargar)
+              location.hash = '#grupos-reloaded';
           });
       });
   }
 
   btnAddGrupo.addEventListener('click', function() {
-      grupos.push({curso: '', cantidad: 0});
-      renderGrupos();
+      var gruposActuales = sincronizarGruposDesdeDOM();
+      gruposActuales.push({curso: '', cantidad: 0});
+      // Re-render desde el array (con los valores actuales + la nueva fila)
+      gruposContainer.innerHTML = '';
+      gruposActuales.forEach(function(g, i) {
+          var row = document.createElement('div');
+          row.className = 'row mb-2 align-items-end grupo-row';
+          row.innerHTML =
+              '<div class="col-md-6">' +
+                  '<label class="form-label small">Curso</label>' +
+                  '<input type="text" name="grupos[' + i + '].curso" value="' + (g.curso || '') + '" class="form-control form-control-sm" placeholder="Ej: 1ºB">' +
+              '</div>' +
+              '<div class="col-md-3">' +
+                  '<label class="form-label small">Cantidad</label>' +
+                  '<input type="number" min="0" name="grupos[' + i + '].cantidad" value="' + (g.cantidad || 0) + '" class="form-control form-control-sm">' +
+              '</div>' +
+              '<div class="col-md-3">' +
+                  '<button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-grupo" data-index="' + i + '">' +
+                      '<i class="bi bi-trash"></i> Quitar' +
+                  '</button>' +
+              '</div>';
+          gruposContainer.appendChild(row);
+      });
+      // Enganchar eliminar
+      gruposContainer.querySelectorAll('.btn-eliminar-grupo').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+              var idx = parseInt(this.getAttribute('data-index'));
+              var actuales = sincronizarGruposDesdeDOM();
+              actuales.splice(idx, 1);
+              gruposContainer.innerHTML = '';
+              actuales.forEach(function(g, i) {
+                  var row = document.createElement('div');
+                  row.className = 'row mb-2 align-items-end grupo-row';
+                  row.innerHTML =
+                      '<div class="col-md-6">' +
+                          '<label class="form-label small">Curso</label>' +
+                          '<input type="text" name="grupos[' + i + '].curso" value="' + (g.curso || '') + '" class="form-control form-control-sm">' +
+                      '</div>' +
+                      '<div class="col-md-3">' +
+                          '<label class="form-label small">Cantidad</label>' +
+                          '<input type="number" min="0" name="grupos[' + i + '].cantidad" value="' + (g.cantidad || 0) + '" class="form-control form-control-sm">' +
+                      '</div>' +
+                      '<div class="col-md-3">' +
+                          '<button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-grupo" data-index="' + i + '">' +
+                              '<i class="bi bi-trash"></i> Quitar' +
+                          '</button>' +
+                      '</div>';
+                  gruposContainer.appendChild(row);
+              });
+              window.location.reload = null; // no-op
+          });
+      });
+  });
+
+  // ============================================================
+  // ENVÍO: hermanos seleccionados -> hidden inputs
+  // ============================================================
+  document.getElementById('pedidoForm').addEventListener('submit', function(e) {
+      if (!radioSocio.checked) return;
+      // Eliminar hidden previos de hermanos
+      this.querySelectorAll('input[type=hidden][name^="hermanos"]').forEach(function(el) { el.remove(); });
+      // Crear hidden por cada hermano seleccionado
+      hermanosSeleccionados.forEach(function(id, i) {
+          var h = hermanosDelAlumno.find(function(x) { return x.id === id; });
+          if (!h) return;
+          var inp1 = document.createElement('input');
+          inp1.type = 'hidden';
+          inp1.name = 'hermanos[' + i + '].nombre';
+          inp1.value = h.nombreCompleto;
+          this.appendChild(inp1);
+          var inp2 = document.createElement('input');
+          inp2.type = 'hidden';
+          inp2.name = 'hermanos[' + i + '].curso';
+          inp2.value = h.curso || '';
+          this.appendChild(inp2);
+      }, this);
   });
 
   // ============================================================
@@ -423,34 +551,6 @@
   // ============================================================
   actualizarBloques();
   renderHermanosManual();
-  renderGrupos();
-
-  // ============================================================
-// AL ENVIAR: convertir hermanos seleccionados en campos ocultos
-// ============================================================
-document.getElementById('pedidoForm').addEventListener('submit', function(e) {
-    if (!radioSocio.checked) return; // Solo aplica al bloque socio
-
-    // Eliminar campos ocultos previos de hermanos
-    this.querySelectorAll('input[type=hidden][name^="hermanos"]').forEach(function(el) { el.remove(); });
-
-    // Añadir un hidden por cada hermano seleccionado
-    hermanosSeleccionados.forEach(function(id, i) {
-        var h = hermanosDelAlumno.find(function(x) { return x.id === id; });
-        if (!h) return;
-        var inpNombre = document.createElement('input');
-        inpNombre.type = 'hidden';
-        inpNombre.name = 'hermanos[' + i + '].nombre';
-        inpNombre.value = h.nombreCompleto;
-        this.appendChild(inpNombre);
-
-        var inpCurso = document.createElement('input');
-        inpCurso.type = 'hidden';
-        inpCurso.name = 'hermanos[' + i + '].curso';
-        inpCurso.value = h.curso || '';
-        this.appendChild(inpCurso);
-    });
-});
 
   /*]]>*/
 </script>

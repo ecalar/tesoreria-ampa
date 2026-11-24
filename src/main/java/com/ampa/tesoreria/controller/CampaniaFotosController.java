@@ -1,9 +1,12 @@
 package com.ampa.tesoreria.controller;
 
 import com.ampa.tesoreria.dto.CampaniaFotosForm;
+import com.ampa.tesoreria.dto.PedidoFotoForm;
 import com.ampa.tesoreria.model.CampaniaFotos;
+import com.ampa.tesoreria.model.enums.MetodoPago;
 import com.ampa.tesoreria.service.CampaniaFotosService;
 import com.ampa.tesoreria.service.PedidoFotoService;
+import com.ampa.tesoreria.service.SocioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,6 +28,7 @@ public class CampaniaFotosController {
 
     private final CampaniaFotosService campaniaService;
     private final PedidoFotoService pedidoService;
+    private final SocioService socioService;
 
 
     // ------------------------------------------------------------
@@ -87,11 +91,23 @@ public class CampaniaFotosController {
     // EDICIÓN
     // ------------------------------------------------------------
     @GetMapping("/{id}/editar")
-    public String editar(@PathVariable Long id, Model model) {
-        CampaniaFotos c = campaniaService.findById(id);
-        model.addAttribute("form", campaniaService.toForm(c));
+    public String editar(@PathVariable Long campaniaId, @PathVariable Long id, Model model) {
+        PedidoFoto pedido = pedidoService.findById(id);
+        PedidoFotoForm form = pedidoService.toForm(pedido);
+
+        // Si el alumno no tiene hermanos en el form, lo dejamos vacío
+        if (form.getHermanos() == null) form.setHermanos(new java.util.ArrayList<>());
+        if (form.getGrupos() == null) form.setGrupos(new java.util.ArrayList<>());
+
+        model.addAttribute("form", form);
+        model.addAttribute("campania", campaniaService.findById(campaniaId));
+        model.addAttribute("alumnos", List.of(pedido.getAlumno()));
+        model.addAttribute("socios", socioService.listarTodos());
+        model.addAttribute("metodosPago", MetodoPago.values());
         model.addAttribute("editando", true);
-        return "fotos/form";
+        model.addAttribute("returnTo",
+                "/fotos/" + campaniaId + "/pedidos/" + id + "/editar");
+        return "fotos/pedido-form";
     }
 
     @PostMapping("/{id}/editar")
@@ -236,23 +252,42 @@ public class CampaniaFotosController {
                 "Metodo", "Pagado", "Devuelto (EUR)", "Observaciones");
 
         List<List<String>> rows = new ArrayList<>();
+        BigDecimal totalLotes = BigDecimal.ZERO;
+        BigDecimal totalGrupales = BigDecimal.ZERO;
+        BigDecimal totalIndividuales = BigDecimal.ZERO;
+        BigDecimal totalSubtotal = BigDecimal.ZERO;
+        BigDecimal totalTotal = BigDecimal.ZERO;
+        BigDecimal totalDevuelto = BigDecimal.ZERO;
+
         for (PedidoFoto p : pedidos) {
             int numLotes = p.getNumLotes() != null ? p.getNumLotes() : 0;
             int numIndividuales = p.getNumIndividuales() != null ? p.getNumIndividuales() : 0;
-            int totalGrupales = p.getTotalGrupales();
+            int numGrupales = p.getTotalGrupales();
+
+            BigDecimal totalLote = p.getPrecioLoteAplicado().multiply(BigDecimal.valueOf(numLotes));
+            BigDecimal totalGrupal = p.getPrecioGrupalAplicado().multiply(BigDecimal.valueOf(numGrupales));
+            BigDecimal totalIndividual = p.getPrecioIndividualAplicado().multiply(BigDecimal.valueOf(numIndividuales));
+            BigDecimal devuelto = p.getDevolucion() != null ? p.getDevolucion().getImporte() : BigDecimal.ZERO;
+
+            totalLotes = totalLotes.add(totalLote);
+            totalGrupales = totalGrupales.add(totalGrupal);
+            totalIndividuales = totalIndividuales.add(totalIndividual);
+            totalSubtotal = totalSubtotal.add(p.getSubtotal());
+            totalTotal = totalTotal.add(p.getTotal());
+            totalDevuelto = totalDevuelto.add(devuelto);
 
             rows.add(List.of(
                     p.getAlumno().getNombreCompleto(),
                     safe(p.getCursoAlumno()),
                     String.valueOf(numLotes),
                     ExportUtils.money(p.getPrecioLoteAplicado()),
-                    ExportUtils.money(p.getPrecioLoteAplicado().multiply(java.math.BigDecimal.valueOf(numLotes))),
-                    String.valueOf(totalGrupales),
+                    ExportUtils.money(totalLote),
+                    String.valueOf(numGrupales),
                     ExportUtils.money(p.getPrecioGrupalAplicado()),
-                    ExportUtils.money(p.getPrecioGrupalAplicado().multiply(java.math.BigDecimal.valueOf(totalGrupales))),
+                    ExportUtils.money(totalGrupal),
                     String.valueOf(numIndividuales),
                     ExportUtils.money(p.getPrecioIndividualAplicado()),
-                    ExportUtils.money(p.getPrecioIndividualAplicado().multiply(java.math.BigDecimal.valueOf(numIndividuales))),
+                    ExportUtils.money(totalIndividual),
                     ExportUtils.money(p.getSubtotal()),
                     ExportUtils.pct(p.getDescuentoAplicado()),
                     ExportUtils.money(p.getTotal()),
@@ -262,6 +297,15 @@ public class CampaniaFotosController {
                     safe(p.getObservaciones())
             ));
         }
+
+        // Fila de totales
+        rows.add(List.of(
+                "TOTAL", "", "", "", ExportUtils.money(totalLotes),
+                "", "", ExportUtils.money(totalGrupales),
+                "", "", ExportUtils.money(totalIndividuales),
+                ExportUtils.money(totalSubtotal), "",
+                ExportUtils.money(totalTotal), "", "", ExportUtils.money(totalDevuelto), ""
+        ));
 
         writeResponse(response, formato,
                 "fotos_" + campania.getId() + "_ingresos",

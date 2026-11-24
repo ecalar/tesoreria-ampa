@@ -46,7 +46,6 @@ public class CampaniaFotos {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precioIndividual;
 
-    /** % descuento para hijos de socios (0-100) */
     @Column(nullable = false, precision = 5, scale = 2)
     @Builder.Default
     private BigDecimal descuentoSocioPorcentaje = BigDecimal.ZERO;
@@ -55,13 +54,9 @@ public class CampaniaFotos {
     @Builder.Default
     private boolean cerrada = false;
 
-    // Relaciones
-
     @OneToMany(mappedBy = "campania", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<PedidoFoto> pedidos = new ArrayList<>();
-
-    // Helpers
 
     public void addPedido(PedidoFoto pedido) {
         pedidos.add(pedido);

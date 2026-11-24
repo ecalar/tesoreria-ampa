@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -44,15 +43,6 @@ public class PedidoFotoService {
                     .toList();
         }
         return pedidos;
-    }
-
-    public PedidoFoto findByIdCompleto(Long id) {
-        PedidoFoto p = findById(id);
-        // Forzar la carga de hermanos dentro de la transacción
-        if (p.getHermanos() != null) {
-            p.getHermanos().size();
-        }
-        return p;
     }
 
     public PedidoFoto findById(Long id) {
@@ -117,6 +107,7 @@ public class PedidoFotoService {
                 .pagado(false)
                 .fechaPedido(LocalDate.now())
                 .observaciones(form.getObservaciones())
+                .hermanosExternos(form.getHermanosExternos())
                 .grupos(new ArrayList<>())
                 .hermanos(new HashSet<>())
                 .build();
@@ -158,6 +149,13 @@ public class PedidoFotoService {
                     "Desmárcalo primero si necesitas cambiarlo.");
         }
 
+        // Si el form trae alumnoId, actualizarlo (por si se cambió)
+        if (form.getAlumnoId() != null) {
+            Alumno nuevoAlumno = alumnoService.findById(form.getAlumnoId());
+            pedido.setAlumno(nuevoAlumno);
+            pedido.setCursoAlumno(nuevoAlumno.getCurso());
+        }
+
         int numLotes = form.getNumLotes() != null ? form.getNumLotes() : 0;
         int numIndividuales = form.getNumIndividuales() != null ? form.getNumIndividuales() : 0;
         int totalGrupales = form.getGrupos() == null ? 0
@@ -169,6 +167,7 @@ public class PedidoFotoService {
             throw new IllegalArgumentException("El pedido debe tener al menos un lote, grupal o individual");
         }
 
+        // Recalcular con los precios guardados (snapshot)
         BigDecimal subtotal = BigDecimal.ZERO;
         subtotal = subtotal.add(pedido.getPrecioLoteAplicado().multiply(BigDecimal.valueOf(numLotes)));
         subtotal = subtotal.add(pedido.getPrecioGrupalAplicado().multiply(BigDecimal.valueOf(totalGrupales)));
@@ -182,7 +181,9 @@ public class PedidoFotoService {
         pedido.setTotal(total);
         pedido.setMetodoPago(form.getMetodoPago());
         pedido.setObservaciones(form.getObservaciones());
+        pedido.setHermanosExternos(form.getHermanosExternos());
 
+        // Reemplazar grupos
         pedido.getGrupos().clear();
         if (form.getGrupos() != null) {
             for (PedidoFotoForm.GrupoForm g : form.getGrupos()) {
@@ -196,6 +197,7 @@ public class PedidoFotoService {
             }
         }
 
+        // Reemplazar hermanos
         pedido.getHermanos().clear();
         if (form.getHermanos() != null) {
             for (PedidoFotoForm.HermanoForm h : form.getHermanos()) {
@@ -212,7 +214,7 @@ public class PedidoFotoService {
     }
 
     // ------------------------------------------------------------
-    // MARCAR PAGADO / DESMARCAR
+    // MARCAR PAGADO / DESMARCAR / ELIMINAR
     // ------------------------------------------------------------
     @Transactional
     public void marcarPagado(Long id, LocalDate fecha) {
@@ -288,6 +290,7 @@ public class PedidoFotoService {
         form.setNumIndividuales(p.getNumIndividuales());
         form.setMetodoPago(p.getMetodoPago());
         form.setObservaciones(p.getObservaciones());
+        form.setHermanosExternos(p.getHermanosExternos());
 
         if (p.getGrupos() != null) {
             for (GrupoFoto g : p.getGrupos()) {
@@ -297,8 +300,6 @@ public class PedidoFotoService {
                 form.getGrupos().add(gf);
             }
         }
-
-        // Los hermanos son Set -> los volvemos a una List del form
         if (p.getHermanos() != null) {
             for (HermanoFoto h : p.getHermanos()) {
                 PedidoFotoForm.HermanoForm hf = new PedidoFotoForm.HermanoForm();

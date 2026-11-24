@@ -92,7 +92,6 @@
                     <th class="text-end">Precio lote</th>
                     <th class="text-end">Precio grupal</th>
                     <th class="text-end">Precio ind.</th>
-                    <th class="text-end">Cobrado</th>
                     <th>Estado</th>
                     <th></th>
                 </tr>
@@ -111,7 +110,7 @@
                     <td class="text-end" th:text="${#numbers.formatDecimal(c.precioLote, 1, 2)} + ' EUR'"></td>
                     <td class="text-end" th:text="${#numbers.formatDecimal(c.precioGrupal, 1, 2)} + ' EUR'"></td>
                     <td class="text-end" th:text="${#numbers.formatDecimal(c.precioIndividual, 1, 2)} + ' EUR'"></td>
-                    <td class="text-end text-success">—</td>
+                    <td>
                         <span th:if="${c.cerrada}" class="badge bg-secondary">CERRADA</span>
                         <span th:unless="${c.cerrada}" class="badge bg-success">ABIERTA</span>
                     </td>
@@ -126,7 +125,7 @@
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(campanias)}">
-                    <td colspan="9" class="text-center text-muted py-4">
+                    <td colspan="8" class="text-center text-muted py-4">
                         No hay campañas creadas.
                     </td>
                 </tr>

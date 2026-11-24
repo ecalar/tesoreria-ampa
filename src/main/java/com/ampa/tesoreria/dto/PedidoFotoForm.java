@@ -23,6 +23,7 @@ public class PedidoFotoForm {
 
     private MetodoPago metodoPago;
     private String observaciones;
+    private String hermanosExternos;
 
     @Getter
     @Setter

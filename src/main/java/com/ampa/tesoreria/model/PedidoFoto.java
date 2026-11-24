@@ -37,6 +37,9 @@ public class PedidoFoto {
     @Column(length = 50)
     private String cursoAlumno;
 
+    @Column(length = 500)
+    private String hermanosExternos;
+
     // Cantidades
 
     @Column(nullable = false)

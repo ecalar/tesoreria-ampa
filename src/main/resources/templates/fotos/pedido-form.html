@@ -75,13 +75,15 @@
 
         <div class="mb-3">
           <label class="form-label">Alumno *</label>
-          <select th:field="*{alumnoId}" id="selectAlumnoSocio" class="form-select" disabled>
+          <select th:field="*{alumnoId}" id="selectAlumnoSocio" class="form-select">
             <option value="">-- Primero selecciona un socio --</option>
           </select>
+          <!-- Importante: hidden para que se envíe el alumno al editar -->
+          <input th:if="${editando}" type="hidden" th:field="*{alumnoId}">
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Hermanos del alumno (informativo para el fotógrafo)</label>
+          <label class="form-label">Hermanos del alumno (en el centro)</label>
           <div id="listaHermanos" class="border rounded p-2 bg-light">
             <p class="text-muted small mb-0">Selecciona un alumno para ver sus hermanos.</p>
           </div>
@@ -98,8 +100,12 @@
       <div class="card-body">
         <div class="mb-3">
           <label class="form-label">Alumno *</label>
-          <select th:field="*{alumnoId}" id="selectAlumnoNoSocio" class="form-select" disabled>
+          <select th:field="*{alumnoId}" id="selectAlumnoNoSocio" class="form-select">
             <option value="">-- Selecciona un alumno no socio --</option>
+            <option th:each="a : ${alumnos}"
+                    th:value="${a.id}"
+                    th:text="${a.nombreCompleto + ' (' + (a.curso != null ? a.curso : 'sin curso') + ')'}"
+                    th:selected="${form.alumnoId != null and form.alumnoId == a.id}"></option>
           </select>
           <div class="mt-2">
             <a th:href="@{/alumnos/nuevo-no-socio(returnTo=${returnTo})}"
@@ -110,14 +116,46 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Hermanos (informativo para el fotógrafo)</label>
+          <label class="form-label">Hermanos en el centro (informativo para el fotógrafo)</label>
           <div id="hermanosNoSocioContainer">
-            <!-- JS los añade aquí -->
+            <!-- Renderizado Thymeleaf para edición -->
+            <div th:each="h, iter : *{hermanos}" class="row mb-2 align-items-end hermano-row">
+              <div class="col-md-5">
+                <label class="form-label small">Nombre</label>
+                <input type="text" th:field="*{hermanos[__${iter.index}__].nombre}"
+                       class="form-control form-control-sm">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small">Curso</label>
+                <input type="text" th:field="*{hermanos[__${iter.index}__].curso}"
+                       class="form-control form-control-sm">
+              </div>
+              <div class="col-md-3">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-hermano">
+                  <i class="bi bi-trash"></i> Quitar
+                </button>
+              </div>
+            </div>
           </div>
           <button type="button" id="btnAddHermanoManual" class="btn btn-sm btn-outline-secondary mt-2">
-            <i class="bi bi-plus-lg"></i> Añadir hermano
+            <i class="bi bi-plus-lg"></i> Añadir hermano en el centro
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- HERMANOS EXTERNOS (para todos, socios y no socios) -->
+    <div class="card mb-3 border-warning">
+      <div class="card-header bg-warning bg-opacity-25">
+        <strong>Hermanos externos (fuera del centro)</strong>
+      </div>
+      <div class="card-body">
+        <label class="form-label">Si el alumno quiere fotos con un hermano que NO está en el centro, ponlo aquí</label>
+        <input type="text" th:field="*{hermanosExternos}" class="form-control"
+               placeholder="Ej: María Pérez (8 años, no en el centro)">
+        <small class="text-muted">
+          Este texto aparece en el listado organizativo para el fotógrafo.
+        </small>
       </div>
     </div>
 
@@ -148,7 +186,7 @@
       </div>
       <div class="card-body">
         <div id="gruposContainer">
-          <!-- Renderizado con Thymeleaf: si estamos editando, vienen los grupos existentes -->
+          <!-- Renderizado Thymeleaf para edición -->
           <div th:each="g, iter : *{grupos}" class="row mb-2 align-items-end grupo-row">
             <div class="col-md-6">
               <label class="form-label small">Curso</label>
@@ -204,13 +242,13 @@
 
 <script th:inline="javascript">
   /*<![CDATA[*/
-  // ============================================================
-  // ESTADO
-  // ============================================================
   var hermanosDelAlumno = [];
   var hermanosSeleccionados = [];
-  var hermanosManual = [];
   var alumnoEditandoId = /*[[${form.alumnoId}]]*/ null;
+  var hermanosExistentes = /*[[${hermanosExistentesJson}]]*/ '[]';
+  if (typeof hermanosExistentes === 'string') {
+      try { hermanosExistentes = JSON.parse(hermanosExistentes); } catch (e) { hermanosExistentes = []; }
+  }
 
   // ============================================================
   // RADIO SOCIO / NO SOCIO
@@ -247,10 +285,7 @@
   buscadorSocio.addEventListener('input', function() {
       clearTimeout(timerBusqueda);
       var q = this.value.trim();
-      if (q.length < 2) {
-          resultadosSocios.style.display = 'none';
-          return;
-      }
+      if (q.length < 2) { resultadosSocios.style.display = 'none'; return; }
       timerBusqueda = setTimeout(function() {
           fetch('/fotos/ajax/socios/buscar?q=' + encodeURIComponent(q))
               .then(function(r) { return r.json(); })
@@ -264,9 +299,7 @@
                           item.type = 'button';
                           item.className = 'list-group-item list-group-item-action';
                           item.textContent = s.nombreCompleto + ' (' + s.dni + ')';
-                          item.addEventListener('click', function() {
-                              seleccionarSocio(s);
-                          });
+                          item.addEventListener('click', function() { seleccionarSocio(s); });
                           resultadosSocios.appendChild(item);
                       });
                   }
@@ -297,7 +330,7 @@
   }
 
   // ============================================================
-  // SELECCIÓN DE ALUMNO (socio) -> cargar hermanos
+  // SELECCIÓN DE ALUMNO -> cargar hermanos
   // ============================================================
   var selectAlumnoSocio = document.getElementById('selectAlumnoSocio');
   selectAlumnoSocio.addEventListener('change', function() {
@@ -352,65 +385,73 @@
   var hermanosNoSocioContainer = document.getElementById('hermanosNoSocioContainer');
   var btnAddHermanoManual = document.getElementById('btnAddHermanoManual');
 
-  function renderHermanosManual() {
-      hermanosNoSocioContainer.innerHTML = '';
-      hermanosManual.forEach(function(h, i) {
-          var row = document.createElement('div');
-          row.className = 'row mb-2 align-items-end hermano-row';
-          row.innerHTML =
-              '<div class="col-md-5">' +
-                  '<label class="form-label small">Nombre</label>' +
-                  '<input type="text" name="hermanos[' + i + '].nombre" value="' + (h.nombre || '') + '" class="form-control form-control-sm">' +
-              '</div>' +
-              '<div class="col-md-4">' +
-                  '<label class="form-label small">Curso</label>' +
-                  '<input type="text" name="hermanos[' + i + '].curso" value="' + (h.curso || '') + '" class="form-control form-control-sm">' +
-              '</div>' +
-              '<div class="col-md-3">' +
-                  '<button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-hermano" data-index="' + i + '">' +
-                      '<i class="bi bi-trash"></i> Quitar' +
-                  '</button>' +
-              '</div>';
-          hermanosNoSocioContainer.appendChild(row);
-      });
-      hermanosNoSocioContainer.querySelectorAll('.btn-eliminar-hermano').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-              var idx = parseInt(this.getAttribute('data-index'));
-              hermanosManual.splice(idx, 1);
-              renderHermanosManual();
-          });
+  function reindexarHermanosManuales() {
+      var rows = hermanosNoSocioContainer.querySelectorAll('.hermano-row');
+      rows.forEach(function(row, i) {
+          var n = row.querySelector('input[name^="hermanos"][name$=".nombre"]');
+          var c = row.querySelector('input[name^="hermanos"][name$=".curso"]');
+          if (n) n.name = 'hermanos[' + i + '].nombre';
+          if (c) c.name = 'hermanos[' + i + '].curso';
       });
   }
 
   btnAddHermanoManual.addEventListener('click', function() {
-      hermanosManual.push({nombre: '', curso: ''});
-      renderHermanosManual();
+      var row = document.createElement('div');
+      row.className = 'row mb-2 align-items-end hermano-row';
+      row.innerHTML =
+          '<div class="col-md-5">' +
+              '<label class="form-label small">Nombre</label>' +
+              '<input type="text" class="form-control form-control-sm">' +
+          '</div>' +
+          '<div class="col-md-4">' +
+              '<label class="form-label small">Curso</label>' +
+              '<input type="text" class="form-control form-control-sm">' +
+          '</div>' +
+          '<div class="col-md-3">' +
+              '<button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-hermano">' +
+                  '<i class="bi bi-trash"></i> Quitar' +
+              '</button>' +
+          '</div>';
+      hermanosNoSocioContainer.appendChild(row);
+      reindexarHermanosManuales();
+  });
+
+  hermanosNoSocioContainer.addEventListener('click', function(e) {
+      var btn = e.target.closest('.btn-eliminar-hermano');
+      if (btn) {
+          btn.closest('.hermano-row').remove();
+          reindexarHermanosManuales();
+      }
   });
 
   // ============================================================
-  // GRUPOS (sin perder lo escrito al añadir)
+  // GRUPOS
   // ============================================================
   var gruposContainer = document.getElementById('gruposContainer');
   var btnAddGrupo = document.getElementById('btnAddGrupo');
 
-  function sincronizarGruposDesdeDOM() {
+  function reindexarGrupos() {
       var rows = gruposContainer.querySelectorAll('.grupo-row');
-      // Recolectamos los valores actuales del DOM
-      var nuevosGrupos = [];
-      rows.forEach(function(row) {
-          var curso = row.querySelector('input[name$=".curso"]');
-          var cantidad = row.querySelector('input[name$=".cantidad"]');
-          nuevosGrupos.push({
-              curso: curso ? curso.value : '',
-              cantidad: cantidad ? (parseInt(cantidad.value) || 0) : 0
-          });
+      rows.forEach(function(row, i) {
+          var c = row.querySelector('input[name^="grupos"][name$=".curso"]');
+          var q = row.querySelector('input[name^="grupos"][name$=".cantidad"]');
+          if (c) c.name = 'grupos[' + i + '].curso';
+          if (q) q.name = 'grupos[' + i + '].cantidad';
       });
-      return nuevosGrupos;
   }
 
-  function renderGrupos() {
-      // Reconstruye los inputs desde el array
-      var grupos = sincronizarGruposDesdeDOM();
+  function leerGruposDesdeDOM() {
+      var rows = gruposContainer.querySelectorAll('.grupo-row');
+      var result = [];
+      rows.forEach(function(row) {
+          var c = row.querySelector('input[name^="grupos"][name$=".curso"]');
+          var q = row.querySelector('input[name^="grupos"][name$=".cantidad"]');
+          result.push({ curso: c ? c.value : '', cantidad: q ? q.value : 0 });
+      });
+      return result;
+  }
+
+  function renderGrupos(grupos) {
       gruposContainer.innerHTML = '';
       grupos.forEach(function(g, i) {
           var row = document.createElement('div');
@@ -425,101 +466,30 @@
                   '<input type="number" min="0" name="grupos[' + i + '].cantidad" value="' + (g.cantidad || 0) + '" class="form-control form-control-sm">' +
               '</div>' +
               '<div class="col-md-3">' +
-                  '<button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-grupo" data-index="' + i + '">' +
+                  '<button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-grupo">' +
                       '<i class="bi bi-trash"></i> Quitar' +
                   '</button>' +
               '</div>';
           gruposContainer.appendChild(row);
-      });
-      gruposContainer.querySelectorAll('.btn-eliminar-grupo').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-              var idx = parseInt(this.getAttribute('data-index'));
-              var gruposActuales = sincronizarGruposDesdeDOM();
-              gruposActuales.splice(idx, 1);
-              // Re-renderizamos desde el array filtrado
-              gruposContainer.innerHTML = '';
-              gruposActuales.forEach(function(g, i) {
-                  var row = document.createElement('div');
-                  row.className = 'row mb-2 align-items-end grupo-row';
-                  row.innerHTML =
-                      '<div class="col-md-6">' +
-                          '<label class="form-label small">Curso</label>' +
-                          '<input type="text" name="grupos[' + i + '].curso" value="' + (g.curso || '') + '" class="form-control form-control-sm" placeholder="Ej: 1ºB">' +
-                      '</div>' +
-                      '<div class="col-md-3">' +
-                          '<label class="form-label small">Cantidad</label>' +
-                          '<input type="number" min="0" name="grupos[' + i + '].cantidad" value="' + (g.cantidad || 0) + '" class="form-control form-control-sm">' +
-                      '</div>' +
-                      '<div class="col-md-3">' +
-                          '<button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-grupo" data-index="' + i + '">' +
-                              '<i class="bi bi-trash"></i> Quitar' +
-                          '</button>' +
-                      '</div>';
-                  gruposContainer.appendChild(row);
-              });
-              // Re-enganchar listeners
-              gruposContainer.querySelectorAll('.btn-eliminar-grupo').forEach(function(b) {
-                  b.addEventListener('click', arguments.callee); // fallback
-              });
-              // Reasignar listener recursivo (simplificado: recargar)
-              location.hash = '#grupos-reloaded';
-          });
       });
   }
 
   btnAddGrupo.addEventListener('click', function() {
-      var gruposActuales = sincronizarGruposDesdeDOM();
-      gruposActuales.push({curso: '', cantidad: 0});
-      // Re-render desde el array (con los valores actuales + la nueva fila)
-      gruposContainer.innerHTML = '';
-      gruposActuales.forEach(function(g, i) {
-          var row = document.createElement('div');
-          row.className = 'row mb-2 align-items-end grupo-row';
-          row.innerHTML =
-              '<div class="col-md-6">' +
-                  '<label class="form-label small">Curso</label>' +
-                  '<input type="text" name="grupos[' + i + '].curso" value="' + (g.curso || '') + '" class="form-control form-control-sm" placeholder="Ej: 1ºB">' +
-              '</div>' +
-              '<div class="col-md-3">' +
-                  '<label class="form-label small">Cantidad</label>' +
-                  '<input type="number" min="0" name="grupos[' + i + '].cantidad" value="' + (g.cantidad || 0) + '" class="form-control form-control-sm">' +
-              '</div>' +
-              '<div class="col-md-3">' +
-                  '<button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-grupo" data-index="' + i + '">' +
-                      '<i class="bi bi-trash"></i> Quitar' +
-                  '</button>' +
-              '</div>';
-          gruposContainer.appendChild(row);
-      });
-      // Enganchar eliminar
-      gruposContainer.querySelectorAll('.btn-eliminar-grupo').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-              var idx = parseInt(this.getAttribute('data-index'));
-              var actuales = sincronizarGruposDesdeDOM();
-              actuales.splice(idx, 1);
-              gruposContainer.innerHTML = '';
-              actuales.forEach(function(g, i) {
-                  var row = document.createElement('div');
-                  row.className = 'row mb-2 align-items-end grupo-row';
-                  row.innerHTML =
-                      '<div class="col-md-6">' +
-                          '<label class="form-label small">Curso</label>' +
-                          '<input type="text" name="grupos[' + i + '].curso" value="' + (g.curso || '') + '" class="form-control form-control-sm">' +
-                      '</div>' +
-                      '<div class="col-md-3">' +
-                          '<label class="form-label small">Cantidad</label>' +
-                          '<input type="number" min="0" name="grupos[' + i + '].cantidad" value="' + (g.cantidad || 0) + '" class="form-control form-control-sm">' +
-                      '</div>' +
-                      '<div class="col-md-3">' +
-                          '<button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-grupo" data-index="' + i + '">' +
-                              '<i class="bi bi-trash"></i> Quitar' +
-                          '</button>' +
-                      '</div>';
-                  gruposContainer.appendChild(row);
-              });
-              window.location.reload = null; // no-op
-          });
-      });
+      var actuales = leerGruposDesdeDOM();
+      actuales.push({ curso: '', cantidad: 0 });
+      renderGrupos(actuales);
+  });
+
+  gruposContainer.addEventListener('click', function(e) {
+      var btn = e.target.closest('.btn-eliminar-grupo');
+      if (btn) {
+          var actuales = leerGruposDesdeDOM();
+          var row = btn.closest('.grupo-row');
+          var rows = Array.from(gruposContainer.querySelectorAll('.grupo-row'));
+          var idx = rows.indexOf(row);
+          actuales.splice(idx, 1);
+          renderGrupos(actuales);
+      }
   });
 
   // ============================================================
@@ -550,7 +520,40 @@
   // INICIALIZACIÓN
   // ============================================================
   actualizarBloques();
-  renderHermanosManual();
+
+  // Si estamos editando, cargar datos del alumno y marcar hermanos existentes
+  if (alumnoEditandoId) {
+      fetch('/fotos/ajax/alumnos/' + alumnoEditandoId)
+          .then(function(r) { return r.json(); })
+          .then(function(alumno) {
+              if (alumno.esSocio) {
+                  radioSocio.checked = true;
+                  // Rellenar el select de alumno con el alumno editando
+                  var select = document.getElementById('selectAlumnoSocio');
+                  select.innerHTML = '<option value="' + alumno.id + '" selected>' +
+                      alumno.nombreCompleto + ' (' + alumno.curso + ')</option>';
+                  // Cargar hermanos
+                  fetch('/fotos/ajax/alumnos/' + alumnoEditandoId + '/hermanos')
+                      .then(function(r) { return r.json(); })
+                      .then(function(hermanos) {
+                          hermanosDelAlumno = hermanos;
+                          // Marcar los hermanos que ya estaban en el pedido
+                          hermanosExistentes.forEach(function(hex) {
+                              var encontrado = hermanos.find(function(h) {
+                                  return h.nombreCompleto === hex.nombre &&
+                                         (h.curso || '') === (hex.curso || '');
+                              });
+                              if (encontrado) hermanosSeleccionados.push(encontrado.id);
+                          });
+                          renderHermanosSocio();
+                      });
+              } else {
+                  radioNoSocio.checked = true;
+                  document.getElementById('selectAlumnoNoSocio').value = alumno.id;
+              }
+              actualizarBloques();
+          });
+  }
 
   /*]]>*/
 </script>

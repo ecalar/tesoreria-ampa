@@ -114,10 +114,7 @@ public class CampaniaFotosController {
     @GetMapping("/{id}")
     public String detalle(@PathVariable Long id, Model model) {
         CampaniaFotos campania = campaniaService.findById(id);
-
-        // Cargamos los pedidos con @EntityGraph (alumno + grupos + hermanos)
-        List<com.ampa.tesoreria.model.PedidoFoto> pedidos =
-                pedidoService.listarPorCampania(id, null, null);
+        List<PedidoFoto> pedidos = pedidoService.listarPorCampania(id, null, null);
 
         model.addAttribute("campania", campania);
         model.addAttribute("pedidos", pedidos);

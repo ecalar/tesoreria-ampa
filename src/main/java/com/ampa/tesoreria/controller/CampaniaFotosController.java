@@ -9,6 +9,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.ampa.tesoreria.model.PedidoFoto;
+import com.ampa.tesoreria.util.ExportUtils;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -154,5 +159,155 @@ public class CampaniaFotosController {
             redirectAttributes.addFlashAttribute("error", "No se pudo borrar: " + e.getMessage());
             return "redirect:/fotos/" + id;
         }
+    }
+
+    // ------------------------------------------------------------
+// EXPORTACIONES
+// ------------------------------------------------------------
+
+    /**
+     * Listado ORGANIZATIVO para el fotografo.
+     * Alumno, curso, hermanos, lotes, grupales desglosadas, individuales, observaciones.
+     * SIN importes.
+     */
+    @GetMapping("/{id}/export/organizativo/{formato}")
+    public void exportOrganizativo(@PathVariable Long id,
+                                   @PathVariable String formato,
+                                   HttpServletResponse response) throws IOException {
+        CampaniaFotos campania = campaniaService.findById(id);
+        List<PedidoFoto> pedidos = pedidoService.listarPorCampania(id, null, null);
+
+        List<String> headers = List.of(
+                "Alumno", "Curso", "Hermanos",
+                "Lotes", "Grupales (desglose)", "Individuales", "Observaciones");
+
+        List<List<String>> rows = new ArrayList<>();
+        for (PedidoFoto p : pedidos) {
+            // Hermanos: nombre (curso), nombre (curso)...
+            String hermanos = "-";
+            if (p.getHermanos() != null && !p.getHermanos().isEmpty()) {
+                hermanos = p.getHermanos().stream()
+                        .map(h -> h.getNombre() + (h.getCurso() != null ? " (" + h.getCurso() + ")" : ""))
+                        .reduce((a, b) -> a + ", " + b)
+                        .orElse("-");
+            }
+
+            // Grupales: "1ºB x1, 3ºA x2"
+            String grupales = "-";
+            if (p.getGrupos() != null && !p.getGrupos().isEmpty()) {
+                grupales = p.getGrupos().stream()
+                        .map(g -> g.getCurso() + " x" + g.getCantidad())
+                        .reduce((a, b) -> a + ", " + b)
+                        .orElse("-");
+            }
+
+            rows.add(List.of(
+                    p.getAlumno().getNombreCompleto(),
+                    safe(p.getCursoAlumno()),
+                    hermanos,
+                    String.valueOf(p.getNumLotes() != null ? p.getNumLotes() : 0),
+                    grupales,
+                    String.valueOf(p.getNumIndividuales() != null ? p.getNumIndividuales() : 0),
+                    safe(p.getObservaciones())
+            ));
+        }
+
+        writeResponse(response, formato,
+                "fotos_" + campania.getId() + "_organizativo",
+                "Fotos - " + campania.getNombre() + " (organizativo para fotografo)",
+                headers, rows);
+    }
+
+    /**
+     * Listado de INGRESOS para tesoreria.
+     * Alumno, curso, lotes, total grupales, individuales, subtotal, descuento, total,
+     * metodo, pagado, devolucion, observaciones.
+     */
+    @GetMapping("/{id}/export/ingresos/{formato}")
+    public void exportIngresos(@PathVariable Long id,
+                               @PathVariable String formato,
+                               HttpServletResponse response) throws IOException {
+        CampaniaFotos campania = campaniaService.findById(id);
+        List<PedidoFoto> pedidos = pedidoService.listarPorCampania(id, null, null);
+
+        List<String> headers = List.of(
+                "Alumno", "Curso",
+                "Lotes", "P. lote (EUR)", "Total lotes (EUR)",
+                "Grupales", "P. grupal (EUR)", "Total grupales (EUR)",
+                "Individuales", "P. individual (EUR)", "Total individuales (EUR)",
+                "Subtotal (EUR)", "Dto. (%)", "TOTAL (EUR)",
+                "Metodo", "Pagado", "Devuelto (EUR)", "Observaciones");
+
+        List<List<String>> rows = new ArrayList<>();
+        for (PedidoFoto p : pedidos) {
+            int numLotes = p.getNumLotes() != null ? p.getNumLotes() : 0;
+            int numIndividuales = p.getNumIndividuales() != null ? p.getNumIndividuales() : 0;
+            int totalGrupales = p.getTotalGrupales();
+
+            rows.add(List.of(
+                    p.getAlumno().getNombreCompleto(),
+                    safe(p.getCursoAlumno()),
+                    String.valueOf(numLotes),
+                    ExportUtils.money(p.getPrecioLoteAplicado()),
+                    ExportUtils.money(p.getPrecioLoteAplicado().multiply(java.math.BigDecimal.valueOf(numLotes))),
+                    String.valueOf(totalGrupales),
+                    ExportUtils.money(p.getPrecioGrupalAplicado()),
+                    ExportUtils.money(p.getPrecioGrupalAplicado().multiply(java.math.BigDecimal.valueOf(totalGrupales))),
+                    String.valueOf(numIndividuales),
+                    ExportUtils.money(p.getPrecioIndividualAplicado()),
+                    ExportUtils.money(p.getPrecioIndividualAplicado().multiply(java.math.BigDecimal.valueOf(numIndividuales))),
+                    ExportUtils.money(p.getSubtotal()),
+                    ExportUtils.pct(p.getDescuentoAplicado()),
+                    ExportUtils.money(p.getTotal()),
+                    p.getMetodoPago() != null ? p.getMetodoPago().name() : "",
+                    p.isPagado() ? "SI" : "NO",
+                    p.getDevolucion() != null ? ExportUtils.money(p.getDevolucion().getImporte()) : "",
+                    safe(p.getObservaciones())
+            ));
+        }
+
+        writeResponse(response, formato,
+                "fotos_" + campania.getId() + "_ingresos",
+                "Fotos - " + campania.getNombre() + " (ingresos)",
+                headers, rows);
+    }
+
+    // ------------------------------------------------------------
+    private void writeResponse(HttpServletResponse response, String formato, String filename,
+                               String titulo, List<String> headers, List<List<String>> rows)
+            throws IOException {
+        byte[] data;
+        String contentType;
+        String extension;
+
+        switch (formato.toLowerCase()) {
+            case "csv" -> {
+                data = ExportUtils.toCsv(headers, rows);
+                contentType = "text/csv; charset=UTF-8";
+                extension = "csv";
+            }
+            case "xlsx" -> {
+                data = ExportUtils.toExcel(titulo, headers, rows);
+                contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                extension = "xlsx";
+            }
+            case "pdf" -> {
+                data = ExportUtils.toPdf(titulo, headers, rows);
+                contentType = "application/pdf";
+                extension = "pdf";
+            }
+            default -> throw new IllegalArgumentException("Formato no soportado: " + formato);
+        }
+
+        response.setContentType(contentType);
+        response.setHeader("Content-Disposition",
+                "attachment; filename=\"" + filename + "." + extension + "\"");
+        response.setContentLength(data.length);
+        response.getOutputStream().write(data);
+        response.getOutputStream().flush();
+    }
+
+    private String safe(String s) {
+        return s == null ? "" : s;
     }
 }

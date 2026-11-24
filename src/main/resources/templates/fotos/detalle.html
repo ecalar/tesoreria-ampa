@@ -136,10 +136,32 @@
 
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4>Pedidos</h4>
-    <a th:href="@{'/fotos/' + ${campania.id} + '/pedidos/nuevo'}"
-       class="btn btn-sm btn-primary" th:if="${!campania.cerrada}">
-      <i class="bi bi-plus-lg"></i> Nuevo pedido
-    </a>
+    <div>
+      <div class="btn-group me-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+          <i class="bi bi-camera"></i> Exportar organizativo
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" th:href="@{'/fotos/' + ${campania.id} + '/export/organizativo/csv'}">CSV</a></li>
+          <li><a class="dropdown-item" th:href="@{'/fotos/' + ${campania.id} + '/export/organizativo/xlsx'}">Excel</a></li>
+          <li><a class="dropdown-item" th:href="@{'/fotos/' + ${campania.id} + '/export/organizativo/pdf'}">PDF</a></li>
+        </ul>
+      </div>
+      <div class="btn-group me-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+          <i class="bi bi-currency-euro"></i> Exportar ingresos
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" th:href="@{'/fotos/' + ${campania.id} + '/export/ingresos/csv'}">CSV</a></li>
+          <li><a class="dropdown-item" th:href="@{'/fotos/' + ${campania.id} + '/export/ingresos/xlsx'}">Excel</a></li>
+          <li><a class="dropdown-item" th:href="@{'/fotos/' + ${campania.id} + '/export/ingresos/pdf'}">PDF</a></li>
+        </ul>
+      </div>
+      <a th:href="@{'/fotos/' + ${campania.id} + '/pedidos/nuevo'}"
+         class="btn btn-sm btn-primary" th:if="${!campania.cerrada}">
+        <i class="bi bi-plus-lg"></i> Nuevo pedido
+      </a>
+    </div>
   </div>
 
   <div class="card">

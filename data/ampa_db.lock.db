@@ -1,6 +1,6 @@
 #FileLock
-#Tue Nov 24 15:24:22 CET 2026
+#Tue Nov 24 15:29:30 CET 2026
 hostName=enrique-EasyNote-TS44HR
-id=1a20df18608eb9aa95744d477452bc87da7aa285e77
+id=1a20df638d36a9389a8941a5448f17a436f110b0e53
 method=file
-server=127.0.1.1\:41625
+server=127.0.1.1\:32987

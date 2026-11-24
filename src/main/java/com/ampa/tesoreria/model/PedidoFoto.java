@@ -123,9 +123,11 @@ public class PedidoFoto {
         hermano.setPedido(null);
     }
 
+    // En PedidoFoto.java
     @Transient
     public int getTotalGrupales() {
-        return grupos.stream().mapToInt(GrupoFoto::getCantidad).sum();
+        return grupos == null ? 0
+                : grupos.stream().mapToInt(GrupoFoto::getCantidad).sum();
     }
 
     @Transient

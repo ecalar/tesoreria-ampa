@@ -126,4 +126,7 @@ public class SocioService {
         Socio socio = findById(id);
         socioRepository.delete(socio);
     }
+    public List<Socio> listarTodos() {
+        return socioRepository.findByCursoId(cursoService.getCursoActivo().getId());
+    }
 }

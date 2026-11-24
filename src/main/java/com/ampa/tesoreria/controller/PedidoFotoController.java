@@ -6,6 +6,7 @@ import com.ampa.tesoreria.model.enums.MetodoPago;
 import com.ampa.tesoreria.service.AlumnoService;
 import com.ampa.tesoreria.service.CampaniaFotosService;
 import com.ampa.tesoreria.service.PedidoFotoService;
+import com.ampa.tesoreria.service.SocioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
@@ -25,6 +26,7 @@ public class PedidoFotoController {
     private final PedidoFotoService pedidoService;
     private final CampaniaFotosService campaniaService;
     private final AlumnoService alumnoService;
+    private final SocioService socioService;
 
     // ------------------------------------------------------------
     // ALTA
@@ -39,19 +41,21 @@ public class PedidoFotoController {
         form.setNumLotes(0);
         form.setNumIndividuales(0);
 
-        // 1 hueco vacío de grupo y 1 de hermano para guiar al usuario
-        PedidoFotoForm.GrupoForm g = new PedidoFotoForm.GrupoForm();
-        form.getGrupos().add(g);
-        PedidoFotoForm.HermanoForm h = new PedidoFotoForm.HermanoForm();
-        form.getHermanos().add(h);
-
+        // Sin alumno preseleccionado (se elige tras seleccionar socio)
+        // Si viene alumnoCreado, significa que se acaba de crear un no socio,
+        // así que sí lo preseleccionamos.
         if (alumnoCreado != null) {
             form.setAlumnoId(alumnoCreado);
         }
 
+        // Sin grupos ni hermanos iniciales (se añaden dinámicamente en JS)
+        form.setGrupos(new java.util.ArrayList<>());
+        form.setHermanos(new java.util.ArrayList<>());
+
         model.addAttribute("form", form);
         model.addAttribute("campania", campaniaService.findById(campaniaId));
-        model.addAttribute("alumnos", alumnoService.listarTodos());
+        model.addAttribute("socios", socioService.listarTodos());
+        model.addAttribute("alumnos", alumnoService.listarTodos()); // para el caso "no socio"
         model.addAttribute("metodosPago", MetodoPago.values());
         model.addAttribute("editando", false);
         model.addAttribute("returnTo",
@@ -88,6 +92,7 @@ public class PedidoFotoController {
         model.addAttribute("editando", true);
         model.addAttribute("returnTo",
                 "/fotos/" + campaniaId + "/pedidos/" + id + "/editar");
+        model.addAttribute("socios", socioService.listarTodos());
         return "fotos/pedido-form";
     }
 

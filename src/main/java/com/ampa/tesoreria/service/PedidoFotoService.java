@@ -283,9 +283,39 @@ public class PedidoFotoService {
     // ------------------------------------------------------------
     // UTILIDADES
     // ------------------------------------------------------------
+
+    public PedidoFotoForm toForm(PedidoFoto p) {
+        PedidoFotoForm form = new PedidoFotoForm();
+        form.setId(p.getId());
+        form.setCampaniaId(p.getCampania().getId());
+        form.setAlumnoId(p.getAlumno().getId());
+        form.setNumLotes(p.getNumLotes());
+        form.setNumIndividuales(p.getNumIndividuales());
+        form.setMetodoPago(p.getMetodoPago());
+        form.setObservaciones(p.getObservaciones());
+        form.setHermanosExternos(p.getHermanosExternos());
+
+        if (p.getGrupos() != null) {
+            for (GrupoFoto g : p.getGrupos()) {
+                PedidoFotoForm.GrupoForm gf = new PedidoFotoForm.GrupoForm();
+                gf.setCurso(g.getCurso());
+                gf.setCantidad(g.getCantidad());
+                form.getGrupos().add(gf);
+            }
+        }
+        if (p.getHermanos() != null) {
+            for (HermanoFoto h : p.getHermanos()) {
+                PedidoFotoForm.HermanoForm hf = new PedidoFotoForm.HermanoForm();
+                hf.setNombre(h.getNombre());
+                hf.setCurso(h.getCurso());
+                form.getHermanos().add(hf);
+            }
+        }
+        return form;
+    }
+
     public PedidoFotoForm toFormConSocio(PedidoFoto p) {
         PedidoFotoForm form = toForm(p);
-        // Rellenar los campos extra del socio
         if (p.getAlumno().getSocio() != null) {
             form.setSocioIdOriginal(p.getAlumno().getSocio().getId());
             form.setSocioNombreOriginal(

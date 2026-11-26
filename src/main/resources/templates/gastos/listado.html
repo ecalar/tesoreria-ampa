@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Gastos')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Gastos</h2>
+        <a th:href="@{/gastos/nuevo}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Nuevo gasto
+        </a>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/gastos}" method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" th:value="${q}" class="form-control"
+                           placeholder="Concepto o proveedor">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Categoría</label>
+                    <select name="categoriaId" class="form-select">
+                        <option value="">Todas</option>
+                        <option th:each="c : ${categorias}"
+                                th:value="${c.id}"
+                                th:text="${c.nombre}"
+                                th:selected="${categoriaId != null and categoriaId == c.id}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Desde</label>
+                    <input type="date" name="desde" th:value="${desde}" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Hasta</label>
+                    <input type="date" name="hasta" th:value="${hasta}" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Nº gastos</small>
+                <h5 class="mb-0" th:text="${numGastos}"></h5>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Total</small>
+                <h5 class="mb-0 text-danger"
+                    th:text="${#numbers.formatDecimal(total, 1, 2)} + ' EUR'"></h5>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Efectivo</small>
+                <h5 class="mb-0" th:text="${#numbers.formatDecimal(totalEfectivo, 1, 2)} + ' EUR'"></h5>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Transferencia</small>
+                <h5 class="mb-0" th:text="${#numbers.formatDecimal(totalTransferencia, 1, 2)} + ' EUR'"></h5>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-download"></i> Exportar
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" th:href="@{/gastos/export/csv(q=${q},categoriaId=${categoriaId},desde=${desde},hasta=${hasta})}">CSV</a></li>
+                <li><a class="dropdown-item" th:href="@{/gastos/export/xlsx(q=${q},categoriaId=${categoriaId},desde=${desde},hasta=${hasta})}">Excel</a></li>
+                <li><a class="dropdown-item" th:href="@{/gastos/export/pdf(q=${q},categoriaId=${categoriaId},desde=${desde},hasta=${hasta})}">PDF</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Concepto</th>
+                    <th>Categoría</th>
+                    <th>Proveedor</th>
+                    <th class="text-end">Importe</th>
+                    <th>Método</th>
+                    <th>Factura</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="g : ${gastos}">
+                    <td th:text="${#temporals.format(g.fecha, 'dd/MM/yyyy')}"></td>
+                    <td th:text="${g.concepto}"></td>
+                    <td th:text="${g.categoria != null ? g.categoria.nombre : ''}"></td>
+                    <td th:text="${g.proveedor}"></td>
+                    <td class="text-end text-danger"
+                        th:text="${#numbers.formatDecimal(g.importeTotal, 1, 2)} + ' EUR'"></td>
+                    <td>
+                        <span class="badge bg-info" th:text="${g.metodoPago.name()}"></span>
+                    </td>
+                    <td>
+                        <a th:if="${g.rutaFactura != null}"
+                           th:href="@{'/gastos/' + ${g.id} + '/factura'}"
+                           class="btn btn-sm btn-outline-secondary" target="_blank"
+                           title="Ver factura">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </a>
+                        <span th:if="${g.rutaFactura == null}" class="text-muted">—</span>
+                    </td>
+                    <td class="text-end">
+                        <a th:href="@{'/gastos/' + ${g.id} + '/editar'}"
+                           class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form th:action="@{'/gastos/' + ${g.id} + '/borrar'}"
+                              method="post" class="d-inline"
+                              onsubmit="return confirm('Borrar este gasto?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(gastos)}">
+                    <td colspan="8" class="text-center text-muted py-4">
+                        No hay gastos que coincidan.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mt-3" th:if="${!porCategoria.isEmpty()}">
+        <div class="card-header">Desglose por categoría</div>
+        <div class="card-body">
+            <ul class="mb-0">
+                <li th:each="entry : ${porCategoria}">
+                    <strong th:text="${entry.key}"></strong>:
+                    <span th:text="${#numbers.formatDecimal(entry.value, 1, 2)} + ' EUR'"></span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+</body>
+</html>

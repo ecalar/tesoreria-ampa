@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Categorías de gasto')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a th:href="@{/ajustes}" class="btn btn-outline-secondary btn-sm mb-2">
+                <i class="bi bi-arrow-left"></i> Volver a Ajustes
+            </a>
+            <h2 class="mb-0">Categorías de gasto</h2>
+        </div>
+        <a th:href="@{/ajustes/categorias-gastos/nueva}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Nueva categoría
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${categorias}">
+                    <td th:text="${c.nombre}"></td>
+                    <td th:text="${c.descripcion}"></td>
+                    <td>
+                        <span th:if="${c.activa}" class="badge bg-success">ACTIVA</span>
+                        <span th:unless="${c.activa}" class="badge bg-secondary">INACTIVA</span>
+                    </td>
+                    <td class="text-end">
+                        <a th:href="@{'/ajustes/categorias-gastos/' + ${c.id} + '/editar'}"
+                           class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form th:action="@{'/ajustes/categorias-gastos/' + ${c.id} + '/borrar'}"
+                              method="post" class="d-inline"
+                              onsubmit="return confirm('Borrar esta categoría? Solo si no tiene gastos asociados.');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(categorias)}">
+                    <td colspan="4" class="text-center text-muted py-4">
+                        No hay categorías creadas.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

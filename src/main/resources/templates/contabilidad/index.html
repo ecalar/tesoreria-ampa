@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Contabilidad')}"></head>
+<body>
+<div th:replace="~{layout :: sidebar}"></div>
+
+<div class="p-4">
+    <h2>Contabilidad</h2>
+
+    <!-- Filtros de fecha -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form th:action="@{/contabilidad}" method="get" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Desde</label>
+                    <input type="date" name="desde" th:value="${desde}" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Hasta</label>
+                    <input type="date" name="hasta" th:value="${hasta}" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pestañas -->
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${vista == 'libro'} ? 'active'"
+               th:href="@{/contabilidad(desde=${desde},hasta=${hasta})}">
+                <i class="bi bi-journal-text"></i> Libro de caja
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${vista == 'mensual'} ? 'active'"
+               th:href="@{/contabilidad/mensual(desde=${desde},hasta=${hasta})}">
+                <i class="bi bi-bar-chart"></i> Resumen mensual
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${vista == 'apartados'} ? 'active'"
+               th:href="@{/contabilidad/apartados(desde=${desde},hasta=${hasta})}">
+                <i class="bi bi-pie-chart"></i> Por apartado
+            </a>
+        </li>
+    </ul>
+
+    <!-- Totalizadores -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Ingresos</small>
+                <h5 class="mb-0 text-success"
+                    th:text="${#numbers.formatDecimal(totalIngresos, 1, 2)} + ' EUR'"></h5>
+            </div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Gastos / devoluciones</small>
+                <h5 class="mb-0 text-danger"
+                    th:text="${#numbers.formatDecimal(vista == 'apartados' ? totalDevoluciones : totalGastos, 1, 2)} + ' EUR'"></h5>
+            </div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-light"><div class="card-body py-2">
+                <small class="text-muted">Saldo</small>
+                <h5 class="mb-0"
+                    th:text="${#numbers.formatDecimal(saldoFinal, 1, 2)} + ' EUR'"></h5>
+            </div></div>
+        </div>
+    </div>
+
+    <!-- Botones de exportación -->
+    <div class="mb-3">
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-download"></i> Exportar
+            </button>
+            <ul class="dropdown-menu">
+                <li th:if="${vista == 'libro'}">
+                    <a class="dropdown-item" th:href="@{/contabilidad/export/libro/csv(desde=${desde},hasta=${hasta})}">Libro CSV</a>
+                </li>
+                <li th:if="${vista == 'libro'}">
+                    <a class="dropdown-item" th:href="@{/contabilidad/export/libro/xlsx(desde=${desde},hasta=${hasta})}">Libro Excel</a>
+                </li>
+                <li th:if="${vista == 'libro'}">
+                    <a class="dropdown-item" th:href="@{/contabilidad/export/libro/pdf(desde=${desde},hasta=${hasta})}">Libro PDF</a>
+                </li>
+                <li th:if="${vista == 'mensual'}">
+                    <a class="dropdown-item" th:href="@{/contabilidad/export/mensual/csv(desde=${desde},hasta=${hasta})}">Mensual CSV</a>
+                </li>
+                <li th:if="${vista == 'mensual'}">
+                    <a class="dropdown-item" th:href="@{/contabilidad/export/mensual/xlsx(desde=${desde},hasta=${hasta})}">Mensual Excel</a>
+                </li>
+                <li th:if="${vista == 'mensual'}">
+                    <a class="dropdown-item" th:href="@{/contabilidad/export/mensual/pdf(desde=${desde},hasta=${hasta})}">Mensual PDF</a>
+                </li>
+                <li th:if="${vista == 'apartados'}">
+                    <a class="dropdown-item" th:href="@{/contabilidad/export/apartados/csv(desde=${desde},hasta=${hasta})}">Apartados CSV</a>
+                </li>
+                <li th:if="${vista == 'apartados'}">
+                    <a class="dropdown-item" th:href="@{/contabilidad/export/apartados/xlsx(desde=${desde},hasta=${hasta})}">Apartados Excel</a>
+                </li>
+                <li th:if="${vista == 'apartados'}">
+                    <a class="dropdown-item" th:href="@{/contabilidad/export/apartados/pdf(desde=${desde},hasta=${hasta})}">Apartados PDF</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- VISTA: LIBRO DE CAJA -->
+    <div th:if="${vista == 'libro'}" class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Categoría</th>
+                    <th>Concepto</th>
+                    <th>Detalle</th>
+                    <th class="text-end">Ingreso</th>
+                    <th class="text-end">Gasto</th>
+                    <th class="text-end">Saldo</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="m : ${movimientos}">
+                    <td th:text="${#temporals.format(m.fecha, 'dd/MM/yyyy')}"></td>
+                    <td>
+                        <span class="badge bg-secondary" th:text="${m.categoria}"></span>
+                    </td>
+                    <td th:text="${m.concepto}"></td>
+                    <td th:text="${m.detalle}"></td>
+                    <td class="text-end text-success"
+                        th:text="${m.ingreso != null ? #numbers.formatDecimal(m.ingreso, 1, 2) : ''}"></td>
+                    <td class="text-end text-danger"
+                        th:text="${m.gasto != null ? #numbers.formatDecimal(m.gasto, 1, 2) : ''}"></td>
+                    <td class="text-end"
+                        th:text="${m.saldoAcumulado != null ? #numbers.formatDecimal(m.saldoAcumulado, 1, 2) : ''}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(movimientos)}">
+                    <td colspan="7" class="text-center text-muted py-4">
+                        No hay movimientos en el periodo seleccionado.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- VISTA: RESUMEN MENSUAL -->
+    <div th:if="${vista == 'mensual'}" class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Mes</th>
+                    <th class="text-end">Ingresos</th>
+                    <th class="text-end">Gastos</th>
+                    <th class="text-end">Saldo</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${resumen}">
+                    <td th:text="${r.mes}"></td>
+                    <td class="text-end text-success"
+                        th:text="${#numbers.formatDecimal(r.ingresos, 1, 2)} + ' EUR'"></td>
+                    <td class="text-end text-danger"
+                        th:text="${#numbers.formatDecimal(r.gastos, 1, 2)} + ' EUR'"></td>
+                    <td class="text-end"
+                        th:text="${#numbers.formatDecimal(r.saldo, 1, 2)} + ' EUR'"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(resumen)}">
+                    <td colspan="4" class="text-center text-muted py-4">Sin datos.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- VISTA: RESUMEN POR APARTADO -->
+    <div th:if="${vista == 'apartados'}" class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Apartado</th>
+                    <th class="text-end">Ingresos</th>
+                    <th class="text-end">Devoluciones</th>
+                    <th class="text-end">Neto</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${resumen}">
+                    <td>
+                        <strong th:text="${r.apartado}"></strong>
+                    </td>
+                    <td class="text-end text-success"
+                        th:text="${#numbers.formatDecimal(r.ingresos, 1, 2)} + ' EUR'"></td>
+                    <td class="text-end text-danger"
+                        th:text="${#numbers.formatDecimal(r.devoluciones, 1, 2)} + ' EUR'"></td>
+                    <td class="text-end"
+                        th:text="${#numbers.formatDecimal(r.neto, 1, 2)} + ' EUR'"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(resumen)}">
+                    <td colspan="4" class="text-center text-muted py-4">Sin datos.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -32,9 +32,9 @@
                                   : @{'/fotos/' + ${campania.id} + '/pedidos/nuevo'}"
         th:object="${form}" method="post" id="pedidoForm" class="mt-4" style="max-width: 1000px;">
 
-    <!-- Hidden global con el alumno: se envía siempre, aunque el select esté deshabilitado -->
-    <input type="hidden" name="alumnoId"
-           th:value="${editando and alumnoIdOriginal != null ? alumnoIdOriginal : form.alumnoId}">
+    <!-- Hidden del alumno. Se sincroniza por JS con los selects -->
+    <input type="hidden" name="alumnoId" id="hiddenAlumnoId"
+           th:value="${editando and alumnoIdOriginal != null ? alumnoIdOriginal : ''}">
 
     <!-- PASO 1: ¿Es socio? -->
     <div class="card mb-3 border-primary">
@@ -102,7 +102,7 @@
       <div class="card-body">
         <div class="mb-3">
           <label class="form-label">Alumno *</label>
-          <select th:field="*{alumnoId}" id="selectAlumnoNoSocio" class="form-select">
+          <select id="selectAlumnoNoSocio" class="form-select">
             <option value="">-- Selecciona un alumno no socio --</option>
             <option th:each="a : ${alumnos}"
                     th:value="${a.id}"
@@ -251,6 +251,8 @@
       try { hermanosExistentes = JSON.parse(hermanosExistentes); } catch (e) { hermanosExistentes = []; }
   }
 
+  var hiddenAlumnoId = document.getElementById('hiddenAlumnoId');
+
   // ============================================================
   // RADIO SOCIO / NO SOCIO
   // ============================================================
@@ -331,11 +333,12 @@
   }
 
   // ============================================================
-  // SELECCIÓN DE ALUMNO -> cargar hermanos
+  // SELECCIÓN DE ALUMNO (socio) -> sincronizar hidden + cargar hermanos
   // ============================================================
   var selectAlumnoSocio = document.getElementById('selectAlumnoSocio');
   selectAlumnoSocio.addEventListener('change', function() {
       var alumnoId = this.value;
+      if (hiddenAlumnoId) hiddenAlumnoId.value = alumnoId;
       if (!alumnoId) {
           hermanosDelAlumno = [];
           hermanosSeleccionados = [];
@@ -348,6 +351,12 @@
               hermanosDelAlumno = hermanos;
               renderHermanosSocio();
           });
+  });
+
+  // SELECCIÓN DE ALUMNO (no socio) -> sincronizar hidden
+  var selectAlumnoNoSocio = document.getElementById('selectAlumnoNoSocio');
+  selectAlumnoNoSocio.addEventListener('change', function() {
+      if (hiddenAlumnoId) hiddenAlumnoId.value = this.value;
   });
 
   function renderHermanosSocio() {
@@ -484,13 +493,11 @@
   });
 
   // ============================================================
-  // ENVÍO: hermanos seleccionados -> hidden inputs (solo socios)
+  // ENVÍO: hermanos seleccionados -> hidden inputs
   // ============================================================
   document.getElementById('pedidoForm').addEventListener('submit', function(e) {
       if (!radioSocio.checked) return;
-      // Eliminar hidden previos de hermanos
       this.querySelectorAll('input[type=hidden][name^="hermanos"]').forEach(function(el) { el.remove(); });
-      // Crear hidden por cada hermano seleccionado
       hermanosSeleccionados.forEach(function(id, i) {
           var h = hermanosDelAlumno.find(function(x) { return x.id === id; });
           if (!h) return;
@@ -513,7 +520,8 @@
   actualizarBloques();
 
   if (alumnoIdOriginal) {
-      // Estamos editando: cargar datos del alumno y marcar hermanos existentes
+      // Modo edición: cargar datos del alumno y marcar hermanos existentes
+      if (hiddenAlumnoId) hiddenAlumnoId.value = alumnoIdOriginal;
       fetch('/fotos/ajax/alumnos/' + alumnoIdOriginal)
           .then(function(r) { return r.json(); })
           .then(function(alumno) {
@@ -527,7 +535,6 @@
                       .then(function(r) { return r.json(); })
                       .then(function(hermanos) {
                           hermanosDelAlumno = hermanos;
-                          // Marcar los hermanos que ya estaban en el pedido
                           hermanosExistentes.forEach(function(hex) {
                               var encontrado = hermanos.find(function(h) {
                                   return h.nombreCompleto === hex.nombre &&

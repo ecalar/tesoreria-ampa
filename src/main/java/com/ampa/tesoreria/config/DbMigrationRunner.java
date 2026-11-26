@@ -17,19 +17,27 @@ public class DbMigrationRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // 1. Permitir alumnos sin socio (socio_id NULL)
+        // 1. Permitir alumnos sin socio
         try {
             jdbcTemplate.execute("ALTER TABLE alumno ALTER COLUMN socio_id DROP NOT NULL");
             log.info("Migracion: socio_id ahora admite NULL");
         } catch (Exception e) {
-            // Si ya era nullable, la BBDD lanza excepción. Es normal.
             log.debug("socio_id ya era nullable o no requiere cambio");
         }
 
-        // 2. Por si acaso, valor por defecto en autorizacion (no rompe si ya existe)
+        // 2. Valor por defecto en autorizacion
         try {
             jdbcTemplate.execute(
                     "ALTER TABLE alumno ALTER COLUMN autorizacion_desplazamiento_medico SET DEFAULT FALSE");
         } catch (Exception ignored) {}
+
+        // 3. La columna 'importe' de gasto (legacy) ahora admite NULL
+        //    porque hemos pasado a importe_base / importe_total
+        try {
+            jdbcTemplate.execute("ALTER TABLE gasto ALTER COLUMN importe DROP NOT NULL");
+            log.info("Migracion: gasto.importe ahora admite NULL");
+        } catch (Exception e) {
+            log.debug("gasto.importe ya era nullable o no existe");
+        }
     }
 }

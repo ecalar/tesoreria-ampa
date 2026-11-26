@@ -99,15 +99,20 @@ public class BackupService {
     public java.util.List<Path> listarBackups() {
         try {
             Path dir = Paths.get(backupsDir);
-            if (!Files.exists(dir)) return java.util.List.of();
+            if (!Files.exists(dir)) {
+                log.debug("Directorio de backups no existe: {}", dir.toAbsolutePath());
+                return java.util.List.of();
+            }
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.zip")) {
                 java.util.List<Path> result = new java.util.ArrayList<>();
                 for (Path p : stream) result.add(p);
                 result.sort((a, b) -> b.getFileName().toString()
-                        .compareTo(a.getFileName().toString())); // más reciente primero
+                        .compareTo(a.getFileName().toString()));
+                log.debug("Backups encontrados: {}", result.size());
                 return result;
             }
         } catch (IOException e) {
+            log.error("Error listando backups: {}", e.getMessage());
             return java.util.List.of();
         }
     }

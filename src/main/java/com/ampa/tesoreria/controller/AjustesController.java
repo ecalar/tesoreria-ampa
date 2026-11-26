@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/ajustes")
@@ -41,8 +42,8 @@ public class AjustesController {
         form.setIvaActivado(ajusteService.getBoolean(AjusteService.IVA_ACTIVADO, false));
         form.setIvaPorcentaje(ajusteService.getBigDecimal(AjusteService.IVA_PORCENTAJE, new BigDecimal("21")));
         form.setSesionTimeoutMinutos(ajusteService.getInt(AjusteService.SESION_TIMEOUT_MINUTOS, 30));
-        model.addAttribute("backups", backupService.listarBackups());
         model.addAttribute("form", form);
+        model.addAttribute("backups", backupService.listarBackups());
         return "ajustes";
     }
 
@@ -85,11 +86,13 @@ public class AjustesController {
     @GetMapping("/backup/{filename}")
     public ResponseEntity<Resource> descargarBackup(@PathVariable String filename) {
         try {
-            Path path = Paths.get("data/backups").resolve(filename).normalize();
-            if (!Files.exists(path) || !filename.endsWith(".zip")) {
+            Optional<Path> encontrado = backupService.listarBackups().stream()
+                    .filter(p -> p.getFileName().toString().equals(filename))
+                    .findFirst();
+            if (encontrado.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            Resource resource = new FileSystemResource(path);
+            Resource resource = new FileSystemResource(encontrado.get());
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .header(HttpHeaders.CONTENT_DISPOSITION,

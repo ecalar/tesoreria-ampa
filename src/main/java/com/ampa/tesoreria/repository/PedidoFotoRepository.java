@@ -18,7 +18,7 @@ public interface PedidoFotoRepository extends JpaRepository<PedidoFoto, Long> {
     @EntityGraph(attributePaths = {"alumno", "alumno.socio", "grupos", "hermanos", "devolucion"})
     Optional<PedidoFoto> findByCampaniaIdAndAlumnoId(Long campaniaId, Long alumnoId);
 
-    @EntityGraph(attributePaths = {"alumno", "campania", "grupos", "hermanos", "devolucion"})
+    @EntityGraph(attributePaths = {"alumno", "alumno.socio", "campania", "grupos", "hermanos", "devolucion"})
     Optional<PedidoFoto> findById(Long id);
 
     long countByCampaniaId(Long campaniaId);

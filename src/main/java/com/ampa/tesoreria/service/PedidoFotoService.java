@@ -284,6 +284,10 @@ public class PedidoFotoService {
     // UTILIDADES
     // ------------------------------------------------------------
 
+    /**
+     * Devuelve el formulario relleno con los datos básicos del pedido.
+     * NO accede al socio (para no provocar LazyInitializationException).
+     */
     public PedidoFotoForm toForm(PedidoFoto p) {
         PedidoFotoForm form = new PedidoFotoForm();
         form.setId(p.getId());
@@ -314,9 +318,18 @@ public class PedidoFotoService {
         return form;
     }
 
-    public PedidoFotoForm toFormConSocio(PedidoFoto p) {
+    /**
+     * Devuelve el formulario con los datos del pedido Y del socio (si lo tiene).
+     * IMPORTANTE: recibe el ID y carga el pedido dentro de esta transacción.
+     * Así nos aseguramos de que el alumno y el socio se cargan con sesión abierta.
+     */
+    @Transactional(readOnly = true)
+    public PedidoFotoForm toFormConSocio(Long pedidoId) {
+        PedidoFoto p = findById(pedidoId); // findById ya carga alumno con @EntityGraph
         PedidoFotoForm form = toForm(p);
-        if (p.getAlumno().getSocio() != null) {
+
+        // Ahora estamos dentro de una transacción activa y el alumno está cargado
+        if (p.getAlumno() != null && p.getAlumno().getSocio() != null) {
             form.setSocioIdOriginal(p.getAlumno().getSocio().getId());
             form.setSocioNombreOriginal(
                     p.getAlumno().getSocio().getNombre() + " " + p.getAlumno().getSocio().getApellidos());

@@ -77,7 +77,7 @@ public class PedidoFotoController {
     @GetMapping("/{id}/editar")
     public String editar(@PathVariable Long campaniaId, @PathVariable Long id, Model model) {
         PedidoFoto pedido = pedidoService.findById(id);
-        PedidoFotoForm form = pedidoService.toFormConSocio(pedido); // <-- AQUÍ
+        PedidoFotoForm form = pedidoService.toFormConSocio(id); // <-- pasamos el ID
 
         model.addAttribute("form", form);
         model.addAttribute("campania", campaniaService.findById(campaniaId));
@@ -88,8 +88,6 @@ public class PedidoFotoController {
         model.addAttribute("returnTo", "/fotos/" + campaniaId + "/pedidos/" + id + "/editar");
         model.addAttribute("alumnoIdOriginal", pedido.getAlumno().getId());
         model.addAttribute("hermanosExistentesJson", toHermanosJson(pedido));
-
-        // Usar los campos del form (ya vienen rellenos del servicio)
         model.addAttribute("socioIdOriginal", form.getSocioIdOriginal());
         model.addAttribute("socioNombreOriginal", form.getSocioNombreOriginal());
 

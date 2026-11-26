@@ -57,8 +57,10 @@
             <td>
                 <form th:if="${c.estado.name() == 'ABIERTO'}"
                       th:action="@{'/cursos/cerrar/' + ${c.id}}" method="post" class="d-inline"
-                      onsubmit="return confirm('Cerrar el curso? No podras editarlo despues.');">
-                    <button type="submit" class="btn btn-sm btn-outline-warning">Cerrar</button>
+                      onsubmit="return confirm('Cerrar el curso? Se generará un backup automático y no se podrá editar.');">
+                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                        <i class="bi bi-lock"></i> Cerrar
+                    </button>
                 </form>
             </td>
         </tr>

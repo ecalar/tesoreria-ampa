@@ -16,6 +16,7 @@ import java.util.List;
 public class CursoService {
 
     private final CursoEscolarRepository cursoRepository;
+    private final BackupService backupService;
 
     public List<CursoEscolar> findAll() {
         return cursoRepository.findAllByOrderByFechaInicioDesc();
@@ -52,6 +53,8 @@ public class CursoService {
         if (curso.getEstado() == EstadoCurso.CERRADO) {
             return;
         }
+        // Generar backup ANTES de cerrar
+        backupService.generarBackup("cierre_" + curso.getNombre().replace("/", "-"));
         curso.setEstado(EstadoCurso.CERRADO);
         cursoRepository.save(curso);
     }

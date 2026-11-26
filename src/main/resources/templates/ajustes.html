@@ -97,10 +97,42 @@
             </div>
         </div>
 
+
+
         <button type="submit" class="btn btn-primary">Guardar ajustes</button>
 
+            </form>
+    <div class="card mb-3">
+        <div class="card-header">Backups</div>
+        <div class="card-body">
+            <p class="text-muted">
+                Los backups incluyen la base de datos y las facturas adjuntas.
+                Se guardan en <code>data/backups/</code>.
+            </p>
+            <form th:action="@{/ajustes/backup}" method="post" class="mb-3">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-cloud-arrow-down"></i> Generar backup ahora
+                </button>
+            </form>
 
-    </form>
+            <div th:if="${!#lists.isEmpty(backups)}">
+                <h6>Backups disponibles</h6>
+                <ul class="list-group">
+                    <li th:each="b : ${backups}"
+                        class="list-group-item d-flex justify-content-between align-items-center">
+                        <span th:text="${b.fileName}"></span>
+                        <a th:href="@{'/ajustes/backup/' + ${b.fileName}}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-download"></i> Descargar
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <p th:if="${#lists.isEmpty(backups)}" class="text-muted mb-0">
+                No hay backups generados todavía.
+            </p>
+        </div>
+    </div>
 </div>
 </body>
 </html>

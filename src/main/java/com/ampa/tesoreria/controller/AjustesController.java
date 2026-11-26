@@ -2,16 +2,22 @@ package com.ampa.tesoreria.controller;
 
 import com.ampa.tesoreria.dto.AjustesForm;
 import com.ampa.tesoreria.service.AjusteService;
+import com.ampa.tesoreria.service.BackupService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Controller
 @RequestMapping("/ajustes")
@@ -19,6 +25,7 @@ import java.math.BigDecimal;
 public class AjustesController {
 
     private final AjusteService ajusteService;
+    private final BackupService backupService;
 
     @GetMapping
     public String ver(Model model) {
@@ -34,7 +41,7 @@ public class AjustesController {
         form.setIvaActivado(ajusteService.getBoolean(AjusteService.IVA_ACTIVADO, false));
         form.setIvaPorcentaje(ajusteService.getBigDecimal(AjusteService.IVA_PORCENTAJE, new BigDecimal("21")));
         form.setSesionTimeoutMinutos(ajusteService.getInt(AjusteService.SESION_TIMEOUT_MINUTOS, 30));
-
+        model.addAttribute("backups", backupService.listarBackups());
         model.addAttribute("form", form);
         return "ajustes";
     }
@@ -60,5 +67,36 @@ public class AjustesController {
 
     private String nullSafe(String s) {
         return s == null ? "" : s;
+    }
+
+    @PostMapping("/backup")
+    public String generarBackupManual(RedirectAttributes redirectAttributes) {
+        try {
+            Path zip = backupService.generarBackup("manual");
+            redirectAttributes.addFlashAttribute("success",
+                    "Backup generado: " + zip.getFileName());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error",
+                    "No se pudo generar el backup: " + e.getMessage());
+        }
+        return "redirect:/ajustes";
+    }
+
+    @GetMapping("/backup/{filename}")
+    public ResponseEntity<Resource> descargarBackup(@PathVariable String filename) {
+        try {
+            Path path = Paths.get("data/backups").resolve(filename).normalize();
+            if (!Files.exists(path) || !filename.endsWith(".zip")) {
+                return ResponseEntity.notFound().build();
+            }
+            Resource resource = new FileSystemResource(path);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + filename + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

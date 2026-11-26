@@ -88,6 +88,14 @@ public class PedidoFotoController {
         model.addAttribute("returnTo", "/fotos/" + campaniaId + "/pedidos/" + id + "/editar");
         model.addAttribute("alumnoIdOriginal", pedido.getAlumno().getId());
         model.addAttribute("hermanosExistentesJson", toHermanosJson(pedido));
+
+        // NUEVO: datos del socio para rellenar el buscador y el hidden
+        if (pedido.getAlumno().getSocio() != null) {
+            model.addAttribute("socioIdOriginal", pedido.getAlumno().getSocio().getId());
+            model.addAttribute("socioNombreOriginal",
+                    pedido.getAlumno().getSocio().getNombre() + " " + pedido.getAlumno().getSocio().getApellidos());
+        }
+
         return "fotos/pedido-form";
     }
 

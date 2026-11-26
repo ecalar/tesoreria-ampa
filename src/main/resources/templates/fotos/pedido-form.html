@@ -522,6 +522,13 @@
   if (alumnoIdOriginal) {
       // Modo edición: cargar datos del alumno y marcar hermanos existentes
       if (hiddenAlumnoId) hiddenAlumnoId.value = alumnoIdOriginal;
+      var socioIdOriginal = /*[[${socioIdOriginal}]]*/ null;
+    var socioNombreOriginal = /*[[${socioNombreOriginal}]]*/ null;
+    if (socioIdOriginal) {
+        document.getElementById('socioId').value = socioIdOriginal;
+        document.getElementById('socioSeleccionado').value = socioNombreOriginal || '';
+        document.getElementById('buscadorSocio').value = socioNombreOriginal || '';
+    }
       fetch('/fotos/ajax/alumnos/' + alumnoIdOriginal)
           .then(function(r) { return r.json(); })
           .then(function(alumno) {

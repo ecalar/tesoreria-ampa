@@ -11,4 +11,6 @@ public interface CategoriaGastoRepository extends JpaRepository<CategoriaGasto, 
     List<CategoriaGasto> findByActivaTrue();
 
     Optional<CategoriaGasto> findByNombre(String nombre);
+
+    boolean existsByNombre(String nombre);
 }

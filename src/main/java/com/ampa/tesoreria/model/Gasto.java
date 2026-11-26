@@ -32,7 +32,14 @@ public class Gasto {
     private String concepto;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal importe;
+    private BigDecimal importeBase;
+
+    @Column(nullable = false, precision = 5, scale = 2)
+    @Builder.Default
+    private BigDecimal ivaPorcentaje = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal importeTotal;
 
     @Column(nullable = false)
     private LocalDate fecha;
@@ -44,9 +51,11 @@ public class Gasto {
     @Column(length = 150)
     private String proveedor;
 
-    /** Ruta relativa al archivo de factura guardado en disco (ej: "facturas/2024/fact-001.pdf") */
     @Column(length = 500)
     private String rutaFactura;
+
+    @Column(length = 255)
+    private String nombreFacturaOriginal;
 
     @Column(length = 1000)
     private String observaciones;

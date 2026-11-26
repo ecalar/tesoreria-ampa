@@ -6,6 +6,7 @@ import com.ampa.tesoreria.model.enums.EstadoCurso;
 import com.ampa.tesoreria.repository.CursoEscolarRepository;
 import com.ampa.tesoreria.repository.UsuarioRepository;
 import com.ampa.tesoreria.service.AjusteService;
+import com.ampa.tesoreria.service.CategoriaGastoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -24,12 +25,14 @@ public class DataInitializer implements CommandLineRunner {
     private final UsuarioRepository usuarioRepository;
     private final AjusteService ajusteService;
     private final PasswordEncoder passwordEncoder;
+    private final CategoriaGastoService categoriaGastoService;
 
     @Override
     public void run(String... args) {
         inicializarCurso();
         inicializarAjustes();
         inicializarUsuarioAdmin();
+        inicializarCategoriasGasto();
     }
 
     // ------------------------------------------------------------
@@ -122,5 +125,10 @@ public class DataInitializer implements CommandLineRunner {
         log.warn(" Usuario admin creado con password: ampa2024");
         log.warn(" CAMBIA LA CONTRASENA EN EL PRIMER ACCESO DESDE AJUSTES");
         log.warn("========================================================");
+    }
+
+    private void inicializarCategoriasGasto() {
+        categoriaGastoService.inicializarPorDefecto();
+        log.info("Categorias de gasto inicializadas");
     }
 }

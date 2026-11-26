@@ -77,7 +77,7 @@ public class PedidoFotoController {
     @GetMapping("/{id}/editar")
     public String editar(@PathVariable Long campaniaId, @PathVariable Long id, Model model) {
         PedidoFoto pedido = pedidoService.findById(id);
-        PedidoFotoForm form = pedidoService.toForm(pedido);
+        PedidoFotoForm form = pedidoService.toFormConSocio(pedido); // <-- AQUÍ
 
         model.addAttribute("form", form);
         model.addAttribute("campania", campaniaService.findById(campaniaId));
@@ -89,12 +89,9 @@ public class PedidoFotoController {
         model.addAttribute("alumnoIdOriginal", pedido.getAlumno().getId());
         model.addAttribute("hermanosExistentesJson", toHermanosJson(pedido));
 
-        // NUEVO: datos del socio para rellenar el buscador y el hidden
-        if (pedido.getAlumno().getSocio() != null) {
-            model.addAttribute("socioIdOriginal", pedido.getAlumno().getSocio().getId());
-            model.addAttribute("socioNombreOriginal",
-                    pedido.getAlumno().getSocio().getNombre() + " " + pedido.getAlumno().getSocio().getApellidos());
-        }
+        // Usar los campos del form (ya vienen rellenos del servicio)
+        model.addAttribute("socioIdOriginal", form.getSocioIdOriginal());
+        model.addAttribute("socioNombreOriginal", form.getSocioNombreOriginal());
 
         return "fotos/pedido-form";
     }

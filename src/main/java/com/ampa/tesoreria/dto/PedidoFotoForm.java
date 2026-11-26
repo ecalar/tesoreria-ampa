@@ -25,6 +25,9 @@ public class PedidoFotoForm {
     private String observaciones;
     private String hermanosExternos;
 
+    private Long socioIdOriginal;
+    private String socioNombreOriginal;
+
     @Getter
     @Setter
     public static class GrupoForm {

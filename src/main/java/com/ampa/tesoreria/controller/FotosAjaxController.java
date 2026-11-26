@@ -27,7 +27,10 @@ public class FotosAjaxController {
                 .toList();
     }
 
-    /** Hermanos de un alumno (excluye al propio alumno) */
+    /**
+     * Hermanos de un alumno.
+     * IMPORTANTE: excluye al propio alumno (solo devuelve los DEMÁS hijos del socio).
+     */
     @GetMapping("/alumnos/{alumnoId}/hermanos")
     public List<AlumnoSimpleDTO> hermanosDeAlumno(@PathVariable Long alumnoId) {
         Alumno alumno = alumnoService.findById(alumnoId);
@@ -40,19 +43,10 @@ public class FotosAjaxController {
                 .toList();
     }
 
-    /** Datos básicos de un alumno (para autocompletar curso al elegir) */
+    /** Datos básicos de un alumno */
     @GetMapping("/alumnos/{alumnoId}")
     public AlumnoSimpleDTO alumno(@PathVariable Long alumnoId) {
         return toDTO(alumnoService.findById(alumnoId));
-    }
-
-    private AlumnoSimpleDTO toDTO(Alumno a) {
-        AlumnoSimpleDTO dto = new AlumnoSimpleDTO();
-        dto.setId(a.getId());
-        dto.setNombreCompleto(a.getNombreCompleto());
-        dto.setCurso(a.getCurso());
-        dto.setEsSocio(a.getSocio() != null);
-        return dto;
     }
 
     /** Buscar socios por nombre/apellidos/DNI */
@@ -64,6 +58,16 @@ public class FotosAjaxController {
                 .limit(20)
                 .map(this::toSocioDTO)
                 .toList();
+    }
+
+    // ============================================================
+    private AlumnoSimpleDTO toDTO(Alumno a) {
+        AlumnoSimpleDTO dto = new AlumnoSimpleDTO();
+        dto.setId(a.getId());
+        dto.setNombreCompleto(a.getNombreCompleto());
+        dto.setCurso(a.getCurso());
+        dto.setEsSocio(a.getSocio() != null);
+        return dto;
     }
 
     private SocioSimpleDTO toSocioDTO(Socio s) {

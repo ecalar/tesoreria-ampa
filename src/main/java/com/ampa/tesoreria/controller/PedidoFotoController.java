@@ -40,26 +40,18 @@ public class PedidoFotoController {
         form.setMetodoPago(MetodoPago.EFECTIVO);
         form.setNumLotes(0);
         form.setNumIndividuales(0);
-
-        // Sin alumno preseleccionado (se elige tras seleccionar socio)
-        // Si viene alumnoCreado, significa que se acaba de crear un no socio,
-        // así que sí lo preseleccionamos.
         if (alumnoCreado != null) {
             form.setAlumnoId(alumnoCreado);
         }
 
-        // Sin grupos ni hermanos iniciales (se añaden dinámicamente en JS)
-        form.setGrupos(new java.util.ArrayList<>());
-        form.setHermanos(new java.util.ArrayList<>());
-
         model.addAttribute("form", form);
         model.addAttribute("campania", campaniaService.findById(campaniaId));
+        model.addAttribute("alumnos", alumnoService.listarTodos());
         model.addAttribute("socios", socioService.listarTodos());
-        model.addAttribute("alumnos", alumnoService.listarTodos()); // para el caso "no socio"
         model.addAttribute("metodosPago", MetodoPago.values());
         model.addAttribute("editando", false);
-        model.addAttribute("returnTo",
-                "/fotos/" + campaniaId + "/pedidos/nuevo");
+        model.addAttribute("returnTo", "/fotos/" + campaniaId + "/pedidos/nuevo");
+        model.addAttribute("hermanosExistentesJson", "[]");
         return "fotos/pedido-form";
     }
 
@@ -85,14 +77,17 @@ public class PedidoFotoController {
     @GetMapping("/{id}/editar")
     public String editar(@PathVariable Long campaniaId, @PathVariable Long id, Model model) {
         PedidoFoto pedido = pedidoService.findById(id);
-        model.addAttribute("form", pedidoService.toForm(pedido));
+        PedidoFotoForm form = pedidoService.toForm(pedido);
+
+        model.addAttribute("form", form);
         model.addAttribute("campania", campaniaService.findById(campaniaId));
         model.addAttribute("alumnos", List.of(pedido.getAlumno()));
+        model.addAttribute("socios", socioService.listarTodos());
         model.addAttribute("metodosPago", MetodoPago.values());
         model.addAttribute("editando", true);
-        model.addAttribute("returnTo",
-                "/fotos/" + campaniaId + "/pedidos/" + id + "/editar");
-        model.addAttribute("socios", socioService.listarTodos());
+        model.addAttribute("returnTo", "/fotos/" + campaniaId + "/pedidos/" + id + "/editar");
+        model.addAttribute("alumnoIdOriginal", pedido.getAlumno().getId());
+        model.addAttribute("hermanosExistentesJson", toHermanosJson(pedido));
         return "fotos/pedido-form";
     }
 
@@ -190,5 +185,31 @@ public class PedidoFotoController {
             redirectAttributes.addFlashAttribute("error", "No se pudo borrar: " + e.getMessage());
         }
         return "redirect:/fotos/" + campaniaId;
+    }
+
+    // ------------------------------------------------------------
+    // HELPER: JSON de hermanos existentes para marcar checkboxes al editar
+    // ------------------------------------------------------------
+    private String toHermanosJson(PedidoFoto p) {
+        StringBuilder sb = new StringBuilder("[");
+        boolean first = true;
+        if (p.getHermanos() != null) {
+            for (var h : p.getHermanos()) {
+                if (!first) sb.append(",");
+                first = false;
+                sb.append("{\"nombre\":\"")
+                        .append(escapeJson(h.getNombre()))
+                        .append("\",\"curso\":\"")
+                        .append(escapeJson(h.getCurso() != null ? h.getCurso() : ""))
+                        .append("\"}");
+            }
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

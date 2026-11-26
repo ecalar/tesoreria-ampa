@@ -59,6 +59,9 @@ public class PedidoFotoService {
         if (campania.isCerrada()) {
             throw new IllegalStateException("La campaña está cerrada");
         }
+        if (form.getAlumnoId() == null) {
+            throw new IllegalArgumentException("Debes seleccionar un alumno");
+        }
         Alumno alumno = alumnoService.findById(form.getAlumnoId());
 
         if (pedidoRepository.findByCampaniaIdAndAlumnoId(campania.getId(), alumno.getId()).isPresent()) {
@@ -149,8 +152,8 @@ public class PedidoFotoService {
                     "Desmárcalo primero si necesitas cambiarlo.");
         }
 
-        // Si el form trae alumnoId, actualizarlo (por si se cambió)
-        if (form.getAlumnoId() != null) {
+        // Solo cambiamos el alumno si viene en el form y es DISTINTO al actual
+        if (form.getAlumnoId() != null && !form.getAlumnoId().equals(pedido.getAlumno().getId())) {
             Alumno nuevoAlumno = alumnoService.findById(form.getAlumnoId());
             pedido.setAlumno(nuevoAlumno);
             pedido.setCursoAlumno(nuevoAlumno.getCurso());
@@ -167,7 +170,6 @@ public class PedidoFotoService {
             throw new IllegalArgumentException("El pedido debe tener al menos un lote, grupal o individual");
         }
 
-        // Recalcular con los precios guardados (snapshot)
         BigDecimal subtotal = BigDecimal.ZERO;
         subtotal = subtotal.add(pedido.getPrecioLoteAplicado().multiply(BigDecimal.valueOf(numLotes)));
         subtotal = subtotal.add(pedido.getPrecioGrupalAplicado().multiply(BigDecimal.valueOf(totalGrupales)));

@@ -32,6 +32,10 @@
                                   : @{'/fotos/' + ${campania.id} + '/pedidos/nuevo'}"
         th:object="${form}" method="post" id="pedidoForm" class="mt-4" style="max-width: 1000px;">
 
+    <!-- Hidden global con el alumno: se envía siempre, aunque el select esté deshabilitado -->
+    <input type="hidden" name="alumnoId"
+           th:value="${editando and alumnoIdOriginal != null ? alumnoIdOriginal : form.alumnoId}">
+
     <!-- PASO 1: ¿Es socio? -->
     <div class="card mb-3 border-primary">
       <div class="card-header bg-primary text-white">
@@ -75,11 +79,9 @@
 
         <div class="mb-3">
           <label class="form-label">Alumno *</label>
-          <select th:field="*{alumnoId}" id="selectAlumnoSocio" class="form-select">
+          <select id="selectAlumnoSocio" class="form-select">
             <option value="">-- Primero selecciona un socio --</option>
           </select>
-          <!-- Importante: hidden para que se envíe el alumno al editar -->
-          <input th:if="${editando}" type="hidden" th:field="*{alumnoId}">
         </div>
 
         <div class="mb-3">
@@ -118,7 +120,6 @@
         <div class="mb-3">
           <label class="form-label">Hermanos en el centro (informativo para el fotógrafo)</label>
           <div id="hermanosNoSocioContainer">
-            <!-- Renderizado Thymeleaf para edición -->
             <div th:each="h, iter : *{hermanos}" class="row mb-2 align-items-end hermano-row">
               <div class="col-md-5">
                 <label class="form-label small">Nombre</label>
@@ -144,7 +145,7 @@
       </div>
     </div>
 
-    <!-- HERMANOS EXTERNOS (para todos, socios y no socios) -->
+    <!-- HERMANOS EXTERNOS -->
     <div class="card mb-3 border-warning">
       <div class="card-header bg-warning bg-opacity-25">
         <strong>Hermanos externos (fuera del centro)</strong>
@@ -186,7 +187,6 @@
       </div>
       <div class="card-body">
         <div id="gruposContainer">
-          <!-- Renderizado Thymeleaf para edición -->
           <div th:each="g, iter : *{grupos}" class="row mb-2 align-items-end grupo-row">
             <div class="col-md-6">
               <label class="form-label small">Curso</label>
@@ -245,6 +245,7 @@
   var hermanosDelAlumno = [];
   var hermanosSeleccionados = [];
   var alumnoEditandoId = /*[[${form.alumnoId}]]*/ null;
+  var alumnoIdOriginal = /*[[${alumnoIdOriginal}]]*/ null;
   var hermanosExistentes = /*[[${hermanosExistentesJson}]]*/ '[]';
   if (typeof hermanosExistentes === 'string') {
       try { hermanosExistentes = JSON.parse(hermanosExistentes); } catch (e) { hermanosExistentes = []; }
@@ -264,7 +265,7 @@
           bloqueNoSocio.style.display = 'none';
           document.getElementById('selectAlumnoNoSocio').disabled = true;
           document.getElementById('selectAlumnoSocio').disabled =
-              !document.getElementById('socioId').value;
+              !document.getElementById('socioId').value && !alumnoIdOriginal;
       } else {
           bloqueSocio.style.display = 'none';
           bloqueNoSocio.style.display = 'block';
@@ -425,20 +426,10 @@
   });
 
   // ============================================================
-  // GRUPOS
+  // GRUPOS (sin perder datos)
   // ============================================================
   var gruposContainer = document.getElementById('gruposContainer');
   var btnAddGrupo = document.getElementById('btnAddGrupo');
-
-  function reindexarGrupos() {
-      var rows = gruposContainer.querySelectorAll('.grupo-row');
-      rows.forEach(function(row, i) {
-          var c = row.querySelector('input[name^="grupos"][name$=".curso"]');
-          var q = row.querySelector('input[name^="grupos"][name$=".cantidad"]');
-          if (c) c.name = 'grupos[' + i + '].curso';
-          if (q) q.name = 'grupos[' + i + '].cantidad';
-      });
-  }
 
   function leerGruposDesdeDOM() {
       var rows = gruposContainer.querySelectorAll('.grupo-row');
@@ -493,7 +484,7 @@
   });
 
   // ============================================================
-  // ENVÍO: hermanos seleccionados -> hidden inputs
+  // ENVÍO: hermanos seleccionados -> hidden inputs (solo socios)
   // ============================================================
   document.getElementById('pedidoForm').addEventListener('submit', function(e) {
       if (!radioSocio.checked) return;
@@ -521,19 +512,18 @@
   // ============================================================
   actualizarBloques();
 
-  // Si estamos editando, cargar datos del alumno y marcar hermanos existentes
-  if (alumnoEditandoId) {
-      fetch('/fotos/ajax/alumnos/' + alumnoEditandoId)
+  if (alumnoIdOriginal) {
+      // Estamos editando: cargar datos del alumno y marcar hermanos existentes
+      fetch('/fotos/ajax/alumnos/' + alumnoIdOriginal)
           .then(function(r) { return r.json(); })
           .then(function(alumno) {
               if (alumno.esSocio) {
                   radioSocio.checked = true;
-                  // Rellenar el select de alumno con el alumno editando
                   var select = document.getElementById('selectAlumnoSocio');
                   select.innerHTML = '<option value="' + alumno.id + '" selected>' +
                       alumno.nombreCompleto + ' (' + alumno.curso + ')</option>';
-                  // Cargar hermanos
-                  fetch('/fotos/ajax/alumnos/' + alumnoEditandoId + '/hermanos')
+                  select.disabled = false;
+                  fetch('/fotos/ajax/alumnos/' + alumnoIdOriginal + '/hermanos')
                       .then(function(r) { return r.json(); })
                       .then(function(hermanos) {
                           hermanosDelAlumno = hermanos;
@@ -549,7 +539,8 @@
                       });
               } else {
                   radioNoSocio.checked = true;
-                  document.getElementById('selectAlumnoNoSocio').value = alumno.id;
+                  var selNoSocio = document.getElementById('selectAlumnoNoSocio');
+                  selNoSocio.value = alumno.id;
               }
               actualizarBloques();
           });

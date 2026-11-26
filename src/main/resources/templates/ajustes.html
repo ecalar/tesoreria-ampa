@@ -121,8 +121,8 @@
                 <ul class="list-group">
                     <li th:each="b : ${backups}"
                         class="list-group-item d-flex justify-content-between align-items-center">
-                        <span th:text="${b.fileName}"></span>
-                        <a th:href="@{'/ajustes/backup/' + ${b.fileName}}"
+                        <span th:text="${b}"></span>
+                        <a th:href="@{'/ajustes/backup/' + ${b}}"
                            class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-download"></i> Descargar
                         </a>

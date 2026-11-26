@@ -116,4 +116,11 @@ public class BackupService {
             return java.util.List.of();
         }
     }
+
+    /** Lista los nombres de archivo de los backups (más reciente primero) */
+    public java.util.List<String> listarNombresBackups() {
+        return listarBackups().stream()
+                .map(p -> p.getFileName().toString())
+                .toList();
+    }
 }

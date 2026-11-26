@@ -43,7 +43,7 @@ public class AjustesController {
         form.setIvaPorcentaje(ajusteService.getBigDecimal(AjusteService.IVA_PORCENTAJE, new BigDecimal("21")));
         form.setSesionTimeoutMinutos(ajusteService.getInt(AjusteService.SESION_TIMEOUT_MINUTOS, 30));
         model.addAttribute("form", form);
-        model.addAttribute("backups", backupService.listarBackups());
+        model.addAttribute("backups", backupService.listarNombresBackups());
         return "ajustes";
     }
 
